@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import 'antd/dist/antd.css';
 import axios from 'axios';
+import moment, { Moment } from 'moment';
+import type { RangeValue } from 'rc-picker/lib/interface';
 import {
   Layout,
   Menu,
   Typography,
   Input,
-  Button,
   Table,
   Tag,
   Avatar,
   DatePicker,
+  Row,
+  Col,
 } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
+const { Search } = Input;
+const { RangePicker } = DatePicker;
 
-// ✅ 타입 지정
+// ✅ 타입 정의
 interface StoringOrder {
   key: number;
   storingOrderId: string;
@@ -29,7 +34,6 @@ interface StoringOrder {
   status: string;
 }
 
-// ✅ 테이블 컬럼 정의
 const columns = [
   {
     title: 'Storing Order ID',
@@ -77,26 +81,14 @@ const columns = [
 ];
 
 const detailColumns = [
-  {
-    title: 'Package ID',
-    dataIndex: 'packageId',
-    key: 'packageId',
-  },
-  {
-    title: 'Product ID',
-    dataIndex: 'productId',
-    key: 'productId',
-  },
+  { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
+  { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
   {
     title: 'Height * Width * Breadth',
     dataIndex: 'dimensions',
     key: 'dimensions',
   },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    key: 'status',
-  },
+  { title: 'Status', dataIndex: 'status', key: 'status' },
 ];
 
 const detailData = [
@@ -124,8 +116,18 @@ const detailData = [
 ];
 
 export default function App() {
+  const [rawData, setRawData] = useState<StoringOrder[]>([]);
   const [data, setData] = useState<StoringOrder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState<{
+    customerId: string;
+    storingOrderId: string;
+    dateRange: RangeValue<Moment>;
+  }>({
+    customerId: '',
+    storingOrderId: '',
+    dateRange: null,
+  });
 
   useEffect(() => {
     const fetchStoringOrders = async () => {
@@ -135,11 +137,8 @@ export default function App() {
           'https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders'
         );
 
-        console.log('✅ API 응답:', response.data);
-
-        const rawData = response.data?.data || [];
-
-        const mappedRows: StoringOrder[] = rawData.map(
+        const raw = response.data?.data || [];
+        const mapped: StoringOrder[] = raw.map(
           (item: any, idx: number): StoringOrder => ({
             key: idx,
             storingOrderId: item.storingOrderId,
@@ -152,7 +151,8 @@ export default function App() {
           })
         );
 
-        setData(mappedRows);
+        setRawData(mapped);
+        setData(mapped);
       } catch (error) {
         console.error('❌ 입고 주문 목록 불러오기 실패:', error);
       } finally {
@@ -162,6 +162,25 @@ export default function App() {
 
     fetchStoringOrders();
   }, []);
+
+  const handleSearch = () => {
+    const filtered = rawData.filter((item) => {
+      const matchCustomer =
+        !filters.customerId ||
+        item.customerId.toLowerCase().includes(filters.customerId.toLowerCase());
+      const matchOrderId =
+        !filters.storingOrderId ||
+        item.storingOrderId.toLowerCase().includes(filters.storingOrderId.toLowerCase());
+      const matchDate =
+        !filters.dateRange ||
+        (moment(item.orderDate).isSameOrAfter(filters.dateRange[0], 'day') &&
+          moment(item.orderDate).isSameOrBefore(filters.dateRange[1], 'day'));
+
+      return matchCustomer && matchOrderId && matchDate;
+    });
+
+    setData(filtered);
+  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -231,17 +250,61 @@ export default function App() {
         </Header>
 
         <Content style={{ padding: 24, background: '#f5f5f5' }}>
-          {/* Search Filters */}
+          {/* 검색 필터 영역 */}
           <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              <Input placeholder="Customer ID" />
-              <Input placeholder="Storing Order ID" />
-              <DatePicker placeholder="Delivery Date" />
-              <Button type="primary">Search</Button>
-            </div>
+            <Row gutter={16}>
+              <Col>
+                <label style={{ display: 'block', marginBottom: 4 }}>
+                  Customer ID
+                </label>
+                <Search
+                  placeholder="Input search text"
+                  enterButton
+                  allowClear
+                  value={filters.customerId}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      customerId: e.target.value,
+                    }))
+                  }
+                  onSearch={handleSearch}
+                />
+              </Col>
+              <Col>
+                <label style={{ display: 'block', marginBottom: 4 }}>
+                  Storing Order ID
+                </label>
+                <Search
+                  placeholder="Input search text"
+                  enterButton
+                  allowClear
+                  value={filters.storingOrderId}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      storingOrderId: e.target.value,
+                    }))
+                  }
+                  onSearch={handleSearch}
+                />
+              </Col>
+              <Col>
+                <label style={{ display: 'block', marginBottom: 4 }}>
+                  Delivery Date
+                </label>
+                <RangePicker
+                  style={{ width: 250 }}
+                  value={filters.dateRange}
+                  onChange={(dates) =>
+                    setFilters((prev) => ({ ...prev, dateRange: dates }))
+                  }
+                />
+              </Col>
+            </Row>
           </div>
 
-          {/* Table List */}
+          {/* 테이블 */}
           <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
             <Title level={5}>Storing Order Request List</Title>
             <Table
@@ -252,7 +315,7 @@ export default function App() {
             />
           </div>
 
-          {/* Detail Section */}
+          {/* 상세 영역 */}
           <div style={{ background: '#fff', padding: 24 }}>
             <Title level={5}>Storing Order Detail & Progress</Title>
             <div style={{ marginBottom: 16 }}>
