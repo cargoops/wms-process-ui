@@ -12,11 +12,15 @@ import {
   UserOutlined, BellOutlined, GlobalOutlined,
   SearchOutlined, QuestionCircleOutlined
 } from '@ant-design/icons';
+import { Tabs } from 'antd';
 
+const { TabPane } = Tabs;
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { RangePicker } = DatePicker;
+
+
 
 interface StoringOrder {
   key: number;
@@ -63,6 +67,7 @@ interface InspectionItem {
 }
 
 export default function App() {
+  const [activeStoringOrder, setActiveStoringOrder] = useState<string | null>(null);
   const [selectedMenu, setSelectedMenu] = useState('storing');
   const [rawData, setRawData] = useState<StoringOrder[]>([]);
   const [data, setData] = useState<StoringOrder[]>([]);
@@ -241,24 +246,73 @@ export default function App() {
           <Content style={{ padding: 24, background: '#f5f5f5' }}>
             {selectedMenu === 'storing' && (
               <>
+                {/* ✅ 상단 필터 */}
                 <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
                   <Row gutter={16}>
-                    <Col><label>Customer ID</label><Search placeholder="Search Customer ID" enterButton value={filters.customerId} onChange={(e) => setFilters(prev => ({ ...prev, customerId: e.target.value }))} onSearch={handleSearch} /></Col>
-                    <Col><label>Storing Order ID</label><Search placeholder="Search Order ID" enterButton value={filters.storingOrderId} onChange={(e) => setFilters(prev => ({ ...prev, storingOrderId: e.target.value }))} onSearch={handleSearch} /></Col>
-                    <Col><label>Delivery Date</label><RangePicker style={{ width: 250 }} value={filters.dateRange} onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))} /></Col>
+                    <Col>
+                      <label>Customer ID</label>
+                      <Search
+                        placeholder="Search Customer ID"
+                        enterButton
+                        value={filters.customerId}
+                        onChange={(e) =>
+                          setFilters((prev) => ({ ...prev, customerId: e.target.value }))
+                        }
+                        onSearch={handleSearch}
+                      />
+                    </Col>
+                    <Col>
+                      <label>Storing Order ID</label>
+                      <Search
+                        placeholder="Search Order ID"
+                        enterButton
+                        value={filters.storingOrderId}
+                        onChange={(e) =>
+                          setFilters((prev) => ({ ...prev, storingOrderId: e.target.value }))
+                        }
+                        onSearch={handleSearch}
+                      />
+                    </Col>
+                    <Col>
+                      <label>Delivery Date</label>
+                      <RangePicker
+                        style={{ width: 250 }}
+                        value={filters.dateRange}
+                        onChange={(dates) =>
+                          setFilters((prev) => ({ ...prev, dateRange: dates }))
+                        }
+                      />
+                    </Col>
                   </Row>
-                </div>
+                </div>    
+
+                {/* ✅ Storing Order Request Table */}        
                 <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
                   <Title level={5}>Storing Order Request List</Title>
-                  <Table columns={storingOrderColumns} dataSource={data} loading={loading} pagination={{ pageSize: 6 }} />
+                  <Table
+                    columns={storingOrderColumns}
+                    dataSource={data}
+                    loading={loading}
+                    pagination={{ pageSize: 6 }}
+                  />
                 </div>
-                <div style={{ background: '#fff', padding: 24 }}>
+
+                {/* ✅ Storing Order Detail & Progress */}
+                <div style={{ background: '#fff', padding: 24}}>
                   <Title level={5}>Storing Order Detail & Progress</Title>
-                  <div style={{ marginBottom: 16 }}>
+
+                  <Tabs
+                    activeKey={activeStoringOrder ?? undefined}
+                    onChange={setActiveStoringOrder}
+                    type="editable-card"
+                    hideAdd
+                    style={{ marginBottom: 16 }}
+                  >
                     {Array.from(new Set(receivingData.map(item => item.receivingId))).map((id) => (
-                      <Tag key={id} closable color="blue">{id}</Tag>
+                      <TabPane tab={id} key={id} closable />
                     ))}
-                  </div>
+                  </Tabs>
+
                   <Table
                     columns={[
                       { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
@@ -266,13 +320,23 @@ export default function App() {
                       { title: 'Height * Width * Breadth', dataIndex: 'dimensions', key: 'dimensions' },
                       { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag>{text}</Tag> }
                     ]}
-                    dataSource={receivingData}
+                    dataSource={
+                      activeStoringOrder
+                        ? receivingData.filter(item => item.receivingId === activeStoringOrder)
+                        : []
+                    }
                     loading={receivingLoading}
                     pagination={false}
                   />
                 </div>
+
               </>
             )}
+
+
+
+
+            
             {selectedMenu === 'myreceiving' && (
               <>
                 <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
