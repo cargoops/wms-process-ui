@@ -22,8 +22,6 @@ const { Title, Text } = Typography;
 const { Search } = Input;
 const { RangePicker } = DatePicker;
 
-
-
 interface StoringOrder {
   key: number;
   storingOrderId: string;
@@ -69,6 +67,25 @@ interface InspectionItem {
 }
 
 export default function App() {
+  const menuGroups: Record<string, string> = {
+    storing: 'Receiving',
+    myreceiving: 'Receiving',
+    qc: 'Quality Check',
+    binning: 'Binning',
+    inventory: 'Inventory',
+    picking: 'Picking',
+    dispatch: 'Dispatch'
+  };
+
+  const pageTitles: Record<string, string> = {
+    storing: 'Storing Order Request List',
+    myreceiving: 'My Receiving List',
+    qc: 'Quality Check',
+    binning: 'Binning',
+    inventory: 'Inventory',
+    picking: 'Picking',
+    dispatch: 'Dispatch'
+  };
   const [collapsed, setCollapsed] = useState(false); 
   const [activeStoringOrder, setActiveStoringOrder] = useState<string | null>(null);
   const [selectedMenu, setSelectedMenu] = useState('storing');
@@ -257,11 +274,13 @@ export default function App() {
         <Layout>
           {/* ✅ Breadcrumb 추가*/}
           <div style={{ background: '#fff', padding: '16px 24px' }}>
-            <Breadcrumb>
-              <Breadcrumb.Item>Home</Breadcrumb.Item>
-              <Breadcrumb.Item>Receiving</Breadcrumb.Item>
-              <Breadcrumb.Item>Storing Order Request List</Breadcrumb.Item>
-            </Breadcrumb>
+          <Breadcrumb>
+            <Breadcrumb.Item>Home</Breadcrumb.Item>
+            {menuGroups[selectedMenu] && menuGroups[selectedMenu] !== pageTitles[selectedMenu] && (
+              <Breadcrumb.Item>{menuGroups[selectedMenu]}</Breadcrumb.Item>
+            )}
+            <Breadcrumb.Item>{pageTitles[selectedMenu] || selectedMenu}</Breadcrumb.Item>
+          </Breadcrumb>
           </div>
           <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
             <Title level={3} style={{ margin: 0 }}>{selectedMenu === 'storing' ? 'Storing Order Request List' : 'My Receiving List'}</Title>
@@ -353,7 +372,22 @@ export default function App() {
                       { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
                       { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
                       { title: 'Height * Width * Breadth', dataIndex: 'dimensions', key: 'dimensions' },
-                      { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag>{text}</Tag> }
+                      { 
+                        title: 'Status', 
+                        dataIndex: 'status', 
+                        key: 'status', 
+                        render: (status: string) => {
+                          const color =
+                            status === 'OPEN'
+                              ? 'orange'
+                              : status === 'TQ'
+                              ? 'geekblue'
+                              : status === 'BIN'
+                              ? 'green'
+                              : 'default';
+                          return <Tag color={color}>{status}</Tag>;
+                        }
+                      }
                     ]}
                     dataSource={
                       activeStoringOrder
