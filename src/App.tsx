@@ -6,13 +6,15 @@ import moment, { Moment } from 'moment';
 import type { RangeValue } from 'rc-picker/lib/interface';
 import {
   Layout, Menu, Typography, Input, Table, Tag, Avatar,
-  DatePicker, Row, Col, Button
+  DatePicker, Row, Col, Button, Breadcrumb
 } from 'antd';
 import {
   UserOutlined, BellOutlined, GlobalOutlined,
-  SearchOutlined, QuestionCircleOutlined
+  SearchOutlined, QuestionCircleOutlined, 
+  MenuFoldOutlined, MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import { Tabs } from 'antd';
+
 
 const { TabPane } = Tabs;
 const { Header, Sider, Content } = Layout;
@@ -67,6 +69,7 @@ interface InspectionItem {
 }
 
 export default function App() {
+  const [collapsed, setCollapsed] = useState(false); 
   const [activeStoringOrder, setActiveStoringOrder] = useState<string | null>(null);
   const [selectedMenu, setSelectedMenu] = useState('storing');
   const [rawData, setRawData] = useState<StoringOrder[]>([]);
@@ -167,13 +170,13 @@ export default function App() {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', paddingTop: 56 }}>
       {/* Global Toolbar */}
       <Header
         style={{
           display: 'flex',
-          height: 48,
-          padding: '0 16px',
+          height: 56,
+          padding: '0 24px',
           justifyContent: 'space-between',
           alignItems: 'center',
           background: '#001529',
@@ -187,33 +190,19 @@ export default function App() {
         }}
       >
         {/* 로고 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <svg xmlns="http://www.w3.org/2000/svg" width="28" height="32" viewBox="0 0 28 32" fill="none">
             <path fillRule="evenodd" clipRule="evenodd" d="M13.5492 0.112436C13.8089 -0.0374786 14.1288 -0.0374786 14.3885 0.112436L27.5181 7.69282C27.7777 7.84273 27.9377 8.11979 27.9377 8.41962V23.5804C27.9377 23.8802 27.7777 24.1573 27.5181 24.3072L14.3885 31.8876C14.1288 32.0375 13.8089 32.0375 13.5492 31.8876L0.419631 24.3072C0.159972 24.1573 1.52588e-05 23.8802 1.52588e-05 23.5804V8.41962C1.52588e-05 8.11979 0.159972 7.84273 0.419631 7.69282L13.5492 0.112436ZM25.42 8.41961L13.9689 15.0309L2.51771 8.41961L13.9689 1.80829L25.42 8.41961Z" fill="#93B04C"/>
           </svg>
-          <Text style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>CARGOOPS</Text>
+           <Text style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>CARGOOPS</Text> 
         </div>
 
         {/* 툴 아이콘 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <SearchOutlined style={{ color: 'white' }} />
           <QuestionCircleOutlined style={{ color: 'white' }} />
           <div style={{ position: 'relative' }}>
             <BellOutlined style={{ color: 'white' }} />
-            <span style={{
-              position: 'absolute',
-              top: -6,
-              right: -6,
-              background: '#ff4d4f',
-              color: 'white',
-              borderRadius: '50%',
-              width: 18,
-              height: 18,
-              fontSize: 12,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>11</span>
           </div>
           <Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />
           <Text style={{ color: 'white' }}>Mel Kwon</Text>
@@ -223,7 +212,33 @@ export default function App() {
 
 
       <Layout>
-        <Sider width={220} style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}>
+        <Sider 
+          width={220} 
+          collapsible
+          collapsed = {collapsed}
+          trigger={null}
+          style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
+        >
+          {/* 로고 + 토글 아이콘 블록 삽입 */}
+          <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', gap: 8}}>
+            {/* 로고 영역 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="32" viewBox="0 0 28 32" fill="none">
+                <path fillRule="evenodd" clipRule="evenodd" d="...로고 path 생략..." fill="#93B04C"/>
+              </svg>
+            </div>
+
+            {/* 메뉴 토글 아이콘 */}
+            <div onClick={() => setCollapsed(!collapsed)} style={{ cursor: 'pointer' }}>
+              {collapsed ? (
+                <MenuUnfoldOutlined style={{ fontSize: 18 }} />
+              ) : (
+                <MenuFoldOutlined style={{ fontSize: 18 }} />
+              )}
+            </div>
+          </div>
+          
+          {/* 로고 영역 */}
           <Menu mode="inline" defaultOpenKeys={['receiving']} selectedKeys={[selectedMenu]} onClick={(e) => setSelectedMenu(e.key)}>
             <Menu.Item key="dashboard">Dashboard</Menu.Item>
             <Menu.Item key="master">Master</Menu.Item>
@@ -240,51 +255,71 @@ export default function App() {
         </Sider>
 
         <Layout>
+          {/* ✅ Breadcrumb 추가*/}
+          <div style={{ background: '#fff', padding: '16px 24px' }}>
+            <Breadcrumb>
+              <Breadcrumb.Item>Home</Breadcrumb.Item>
+              <Breadcrumb.Item>Receiving</Breadcrumb.Item>
+              <Breadcrumb.Item>Storing Order Request List</Breadcrumb.Item>
+            </Breadcrumb>
+          </div>
           <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
             <Title level={3} style={{ margin: 0 }}>{selectedMenu === 'storing' ? 'Storing Order Request List' : 'My Receiving List'}</Title>
           </Header>
-          <Content style={{ padding: 24, background: '#f5f5f5' }}>
+          <Content style={{ padding: 24, background: '#f5f5f5'}}>
             {selectedMenu === 'storing' && (
               <>
                 {/* ✅ 상단 필터 */}
                 <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
-                  <Row gutter={16}>
+                  <Row gutter={80}>
                     <Col>
-                      <label>Customer ID</label>
-                      <Search
-                        placeholder="Search Customer ID"
-                        enterButton
-                        value={filters.customerId}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, customerId: e.target.value }))
-                        }
-                        onSearch={handleSearch}
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ marginBottom: 4 }}>Customer ID</label>
+                        <Search
+                          placeholder="Search Customer ID"
+                          enterButton
+                          value={filters.customerId}
+                          onChange={(e) =>
+                            setFilters((prev) => ({ ...prev, customerId: e.target.value }))
+                          }
+                          onSearch={handleSearch}
+                          style={{ width: 250 }}
+                        />
+                      </div>
                     </Col>
+
                     <Col>
-                      <label>Storing Order ID</label>
-                      <Search
-                        placeholder="Search Order ID"
-                        enterButton
-                        value={filters.storingOrderId}
-                        onChange={(e) =>
-                          setFilters((prev) => ({ ...prev, storingOrderId: e.target.value }))
-                        }
-                        onSearch={handleSearch}
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ marginBottom: 4 }}>Storing Order ID</label>
+                        <Search
+                          placeholder="Search Order ID"
+                          enterButton
+                          value={filters.storingOrderId}
+                          onChange={(e) =>
+                            setFilters((prev) => ({ ...prev, storingOrderId: e.target.value }))
+                          }
+                          onSearch={handleSearch}
+                          style={{ width: 250 }}
+                        />
+                      </div>
                     </Col>
+
                     <Col>
-                      <label>Delivery Date</label>
-                      <RangePicker
-                        style={{ width: 250 }}
-                        value={filters.dateRange}
-                        onChange={(dates) =>
-                          setFilters((prev) => ({ ...prev, dateRange: dates }))
-                        }
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ marginBottom: 4 }}>Delivery Date</label>
+                        <RangePicker
+                          style={{ width: 250 }}
+                          value={filters.dateRange}
+                          onChange={(dates) =>
+                            setFilters((prev) => ({ ...prev, dateRange: dates }))
+                          }
+                        />
+                      </div>
                     </Col>
                   </Row>
-                </div>    
+                </div>
+
+ 
 
                 {/* ✅ Storing Order Request Table */}        
                 <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
