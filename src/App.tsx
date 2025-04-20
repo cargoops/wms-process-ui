@@ -11,6 +11,7 @@ import BinningPage from './pages/binning';
 import InventoryPage from './pages/inventory';
 import PickingPage from './pages/picking';
 import DispatchPage from './pages/dispatch';
+import MasterPage from './pages/master';
 
 // Receiving 하위
 import StoringPage from './pages/receiving/storingorder';
@@ -50,16 +51,19 @@ export default function App() {
   };
 
   const pageTitles: Record<string, string> = {
-    storing: 'Storing Order Request List',
-    myreceiving: 'My Receiving List',
-    receiving: 'Receiving Overview',
-    qc: 'Quality Check',
-    binning: 'Binning',
-    inventory: 'Inventory',
-    picking: 'Picking',
-    dispatch: 'Dispatch',
+    'receiving/storing': 'Storing Order Request List',
+    'receiving/myreceiving': 'My Receiving List',
+    'binning/assign': 'Bin Assignment List',
+    'binning/my': 'My Binning',
+    'dispatch/mypacking': 'My Packing',
+    'dispatch/inspection': 'Dispatch Inspection',
+    'inventory/management': 'Inventory Management',
+    'inventory/reconciliation': 'Inventory Reconciliation',
+    'picking/mypicking': 'My Picking',
+    'picking/pickslip': 'Pick Slip List',
     dashboard: 'Dashboard',
     master: 'Master Data',
+    qc: 'Quality Check',
   };
 
   return (
@@ -80,6 +84,9 @@ export default function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
+
+          {/* Master */}
+          <Route path="master" element={<MasterPage />} />
 
           {/* Receiving */}
           <Route path="receiving" element={<ReceivingPage />}>

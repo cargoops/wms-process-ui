@@ -12,7 +12,7 @@ import {
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 const { Header, Sider, Content } = Layout;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 interface AppLayoutProps {
   collapsed: boolean;
@@ -34,10 +34,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
 
+  const path = location.pathname.slice(1);
+  const segments = path.split('/');
+  const key = segments.length === 1 ? segments[0] : `${segments[0]}/${segments[1]}`;
+
   useEffect(() => {
-    const path = location.pathname.slice(1); // remove leading "/"
-    const segments = path.split('/');
-    const key = segments.length === 1 ? segments[0] : `${segments[0]}/${segments[1]}`;
     setSelectedMenu(key || 'dashboard');
   }, [location.pathname]);
 
@@ -158,18 +159,24 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           <div style={{ background: '#fff', padding: '16px 24px' }}>
             <Breadcrumb>
               <Breadcrumb.Item>Home</Breadcrumb.Item>
-              {menuGroups[selectedMenu] && menuGroups[selectedMenu] !== pageTitles[selectedMenu] && (
-                <Breadcrumb.Item>{menuGroups[selectedMenu]}</Breadcrumb.Item>
+              {segments.length >= 1 && segments[0] && (
+                <Breadcrumb.Item>
+                  {menuGroups[segments[0]] || pageTitles[segments[0]] || segments[0]}
+                </Breadcrumb.Item>
               )}
-              <Breadcrumb.Item>{pageTitles[selectedMenu] || selectedMenu}</Breadcrumb.Item>
+              {segments.length === 2 && segments[1] && (
+                <Breadcrumb.Item>
+                  {pageTitles[`${segments[0]}/${segments[1]}`] || segments[1]}
+                </Breadcrumb.Item>
+              )}
             </Breadcrumb>
           </div>
 
-          <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
-            <Typography.Title level={3} style={{ margin: 0 }}>
+          <div style={{ background: '#fff', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+            <Title level={3} style={{ margin: 0 }}>
               {pageTitles[selectedMenu] || 'Page Title'}
-            </Typography.Title>
-          </Header>
+            </Title>
+          </div>
 
           <Content style={{ padding: 24, background: '#f5f5f5' }}>
             <Outlet />
