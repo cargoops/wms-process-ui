@@ -1,12 +1,11 @@
-import { Typography } from 'antd';
-
-const { Title } = Typography;
+import React from 'react';
+import { Outlet } from 'react-router-dom';
 
 export default function PickingPage() {
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3}>Picking</Title>
-      <p>This is the picking page.</p>
+    <div>
+      <h1>Picking</h1>
+      <Outlet />
     </div>
   );
 }

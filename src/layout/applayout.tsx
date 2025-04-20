@@ -35,11 +35,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   const navigate = useNavigate();
 
   useEffect(() => {
-    const segments = location.pathname.split('/');
-    const lastSegment = segments[segments.length - 1] || 'dashboard';
-    if (lastSegment !== selectedMenu) {
-        setSelectedMenu(lastSegment);
-    }
+    const path = location.pathname.slice(1); // remove leading "/"
+    const segments = path.split('/');
+    const key = segments.length === 1 ? segments[0] : `${segments[0]}/${segments[1]}`;
+    setSelectedMenu(key || 'dashboard');
   }, [location.pathname]);
 
   return (
@@ -117,7 +116,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
           <Menu
             mode="inline"
-            defaultOpenKeys={['receiving']}
             selectedKeys={[selectedMenu]}
             onClick={(e) => {
               setSelectedMenu(e.key);
@@ -126,15 +124,33 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           >
             <Menu.Item key="dashboard">Dashboard</Menu.Item>
             <Menu.Item key="master">Master</Menu.Item>
+
             <Menu.SubMenu key="receiving" title="Receiving">
               <Menu.Item key="receiving/storing">Storing Order Request</Menu.Item>
               <Menu.Item key="receiving/myreceiving">My Receiving List</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.Item key="qc">Quality Check</Menu.Item>
-            <Menu.Item key="binning">Binning</Menu.Item>
-            <Menu.Item key="inventory">Inventory</Menu.Item>
-            <Menu.Item key="picking">Picking</Menu.Item>
-            <Menu.Item key="dispatch">Dispatch</Menu.Item>
+
+            <Menu.SubMenu key="binning" title="Binning">
+              <Menu.Item key="binning/assign">Bin Assignment</Menu.Item>
+              <Menu.Item key="binning/my">My Binning</Menu.Item>
+            </Menu.SubMenu>
+
+            <Menu.SubMenu key="inventory" title="Inventory">
+              <Menu.Item key="inventory/management">Inventory Management</Menu.Item>
+              <Menu.Item key="inventory/reconciliation">Inventory Reconciliation</Menu.Item>
+            </Menu.SubMenu>
+
+            <Menu.SubMenu key="picking" title="Picking">
+              <Menu.Item key="picking/mypicking">My Picking</Menu.Item>
+              <Menu.Item key="picking/pickslip">Pick Slip</Menu.Item>
+            </Menu.SubMenu>
+
+            <Menu.SubMenu key="dispatch" title="Dispatch">
+              <Menu.Item key="dispatch/mypacking">My Packing</Menu.Item>
+              <Menu.Item key="dispatch/inspection">Dispatch Inspection</Menu.Item>
+            </Menu.SubMenu>
           </Menu>
         </Sider>
 
