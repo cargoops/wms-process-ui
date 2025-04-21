@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Layout, Menu, Breadcrumb, Typography, Avatar } from 'antd';
 import {
   UserOutlined,
@@ -8,17 +8,14 @@ import {
   QuestionCircleOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  ClockCircleOutlined,
-  HighlightOutlined,
-  EditOutlined,
   TableOutlined,
   DatabaseOutlined,
-  SafetyOutlined,
   WarningOutlined,
   SendOutlined,
   DashboardOutlined,
   FormOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
+  HighlightOutlined
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
@@ -53,8 +50,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
   {/*경로 바뀔 때마다 selectMenu 값을 동기화*/}
   useEffect(() => {
-    setSelectedMenu(key || 'dashboard');
-  }, [location.pathname]);
+    if (location.pathname === '/') {
+      setSelectedMenu('1');
+    }
+  }, [location.pathname, setSelectedMenu, key]);
 
   {/*헤더, 사이드바, 메뉴, 브레드크럼 */}
   return (

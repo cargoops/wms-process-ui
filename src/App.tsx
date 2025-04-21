@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import 'antd/dist/antd.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import AppLayout from './layout/applayout';
 
 // 상위 페이지
@@ -67,7 +67,7 @@ export default function App() {
   };
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route
           path="/"
@@ -122,6 +122,6 @@ export default function App() {
           </Route>
         </Route>
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }

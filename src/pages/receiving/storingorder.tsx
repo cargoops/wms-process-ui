@@ -214,59 +214,59 @@ export default function StoringOrderPage() {
       </div>
 
       {/* ✅ 상세 패널 및 입고 목록 */}
-      <div style={{ background: '#fff', padding: 24 }}>
-        <Title level={5}>Storing Order Detail & Progress</Title>
-        <Tabs
-          activeKey={activeStoringOrder ?? undefined}
-          onChange={setActiveStoringOrder}
-          type="editable-card"
-          hideAdd
-          onEdit={(targetKey, action) => {
-            if (action === 'remove') {
-              const newTabs = openedTabs.filter((id) => id !== targetKey);
-              setOpenedTabs(newTabs);
-              if (activeStoringOrder === targetKey) {
-                setActiveStoringOrder(newTabs[0] ?? null);
-              }
+    <div style={{ background: '#fff', padding: 24 }}>
+    <Title level={5}>Storing Order Detail & Progress</Title>
+    <Tabs
+        activeKey={activeStoringOrder ?? undefined}
+        onChange={setActiveStoringOrder}
+        type="editable-card"
+        hideAdd
+        onEdit={(targetKey, action) => {
+        if (action === 'remove') {
+            const newTabs = openedTabs.filter((id) => id !== targetKey);
+            setOpenedTabs(newTabs);
+            if (activeStoringOrder === targetKey) {
+            setActiveStoringOrder(newTabs[0] ?? null);
             }
-          }}
-        >
-          {openedTabs.map((id) => (
-            <TabPane tab={id} key={id} closable />
-          ))}
-        </Tabs>
+        }
+        }}
+    >
+        {openedTabs.map((id) => (
+        <TabPane tab={id} key={id} closable />
+        ))}
+    </Tabs>
 
-        <Table
-          columns={[
-            { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
-            { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
-            { title: 'Height * Width * Breadth', dataIndex: 'dimensions', key: 'dimensions' },
-            {
-              title: 'Status',
-              dataIndex: 'status',
-              key: 'status',
-              render: (status: string) => {
-                const color =
-                  status === 'OPEN'
-                    ? 'orange'
-                    : status === 'TQ'
-                    ? 'geekblue'
-                    : status === 'BIN'
-                    ? 'green'
-                    : 'default';
-                return <Tag color={color}>{status}</Tag>;
-              },
+    <Table
+        columns={[
+        { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
+        { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
+        { title: 'Height * Width * Breadth', dataIndex: 'dimensions', key: 'dimensions' },
+        {
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            render: (status: string) => {
+            const color =
+                status === 'OPEN'
+                ? 'orange'
+                : status === 'TQ'
+                ? 'geekblue'
+                : status === 'BIN'
+                ? 'green'
+                : 'default';
+            return <Tag color={color}>{status}</Tag>;
             },
-          ]}
-          dataSource={
-            activeStoringOrder
-              ? receivingData.filter((item) => item.receivingId === activeStoringOrder)
-              : []
-          }
-          loading={receivingLoading}
-          pagination={false}
-        />
-      </div>
+        },
+        ]}
+        dataSource={
+        activeStoringOrder
+            ? receivingData.filter((item) => item.receivingId === activeStoringOrder)
+            : []
+        }
+        loading={receivingLoading}
+        pagination={false}
+    />
+    </div>
     </>
   );
 }
