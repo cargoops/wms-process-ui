@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Typography, Input, Table, Tag, Row, Col, Button, Tabs } from 'antd';
+import { Typography, Input, Table, Tag, Row, Col, Button, Tabs, Space } from 'antd';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -53,6 +53,7 @@ interface StoringOrder {
 export default function MyReceivingPage() {
   const [receivingData, setReceivingData] = useState<ReceivingItem[]>([]);
   const [documentInspectionData, setDocumentInspectionData] = useState<DocumentInspectionItem[]>([]);
+  const [editedDiscrepancies, setEditedDiscrepancies] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [activeStoringOrderId, setActiveStoringOrderId] = useState<string | null>(null);
   const [openedInspectionTabs, setOpenedInspectionTabs] = useState<string[]>([]);
@@ -108,9 +109,17 @@ export default function MyReceivingPage() {
   }, []);
 
   const handleDiscrepancyChange = (key: string, value: string) => {
+    setEditedDiscrepancies((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSaveDiscrepancy = (key: string) => {
+    const newVal = editedDiscrepancies[key] ?? '';
     setDocumentInspectionData((prev) =>
       prev.map((item) =>
-        item.key === key ? { ...item, discrepancy: value } : item
+        item.key === key ? { ...item, discrepancy: newVal } : item
       )
     );
   };
@@ -122,7 +131,7 @@ export default function MyReceivingPage() {
 
   return (
     <>
-      {/* Receiving List */}
+      {/* Receiving Filter */}
       <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
         <Row gutter={16} align="middle">
           <Col>
@@ -140,6 +149,7 @@ export default function MyReceivingPage() {
         </Row>
       </div>
 
+      {/* Receiving List */}
       <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
         <Title level={5}>Receiving List</Title>
         <Table
@@ -149,7 +159,18 @@ export default function MyReceivingPage() {
               dataIndex: 'receivingId',
               key: 'receivingId',
               render: (text: string) => (
-                <a onClick={() => handleOpenTab(text)}>{text}</a>
+                <button
+                  onClick={() => handleOpenTab(text)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#1890ff',
+                    padding: 0,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {text}
+                </button>
               ),
             },
             { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
@@ -193,15 +214,23 @@ export default function MyReceivingPage() {
                       key: 'discrepancy',
                       render: (_: any, record: DocumentInspectionItem) =>
                         record.result === 'FAIL' ? (
-                          <Input
-                            value={record.discrepancy}
-                            onChange={(e) =>
-                              handleDiscrepancyChange(record.key, e.target.value)
-                            }
-                            placeholder="Describe issue"
-                          />
+                          <Space>
+                            <Input
+                              value={editedDiscrepancies[record.key] ?? record.discrepancy}
+                              onChange={(e) =>
+                                handleDiscrepancyChange(record.key, e.target.value)
+                              }
+                              placeholder="Describe issue"
+                            />
+                            <Button
+                              type="primary"
+                              onClick={() => handleSaveDiscrepancy(record.key)}
+                            >
+                              Save
+                            </Button>
+                          </Space>
                         ) : (
-                          <span>-</span>
+                          <span>{record.discrepancy}</span>
                         ),
                     },
                     { title: 'Received Date', dataIndex: 'receivedDate', key: 'receivedDate' },
