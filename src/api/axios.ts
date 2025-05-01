@@ -3,7 +3,7 @@ import axios from 'axios';
 const instance = axios.create({
   baseURL: 'https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod',
   headers: {
-    'x-api-key': 'admin-key-4f64a285-f790-490c-882e-f836d730ba5e',
+    'x-api-key': 'e476717b-e720-4281-8e2f-1c0fdc574342',
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
