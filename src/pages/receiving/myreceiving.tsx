@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { Typography, Input, Table, Tag, Row, Col, Button, Tabs, Space } from 'antd';
-import api from '../../api/axios';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -19,14 +19,15 @@ interface ReceivingItem {
 }
 
 interface ApiReceivingItem {
-  quantity: number;
   packageId: string;
-  breadth: number;
-  storingOrderId: string;
-  width: number;
-  height: number;
+  breadth: string;
+  storing_order_id: string;
+  width: string;
+  height: string;
   status: string;
-  productId: string;
+  product_id: string;
+  receiver_id?: string;
+  received_date?: string;
 }
 
 interface DocumentInspectionItem {
@@ -62,15 +63,15 @@ export default function MyReceivingPage() {
     const fetchReceivingData = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/packages');
+        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/packages');
         const mapped: ReceivingItem[] = res.data.data.map((item: ApiReceivingItem, idx: number) => ({
           key: idx,
-          receivingId: item.storingOrderId,
+          receivingId: item.storing_order_id, // ✅ snake_case → camelCase
           packageId: item.packageId,
           barcode: `BAR-${item.packageId}`,
-          productId: item.productId,
-          receiverId: 'emp-001',
-          receivedDate: new Date().toLocaleString(),
+          productId: item.product_id,
+          receiverId: item.receiver_id ?? 'emp-001',
+          receivedDate: item.received_date ?? new Date().toLocaleString(),
           dimensions: `${item.height} * ${item.width} * ${item.breadth}`,
           status: item.status,
         }));
@@ -84,7 +85,7 @@ export default function MyReceivingPage() {
 
     const fetchDocumentInspectionData = async () => {
       try {
-        const res = await api.get('/storing-orders');
+        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders');
         const raw: StoringOrder[] = res.data.data;
 
         const processed: DocumentInspectionItem[] = raw.flatMap((order: StoringOrder, idx: number) =>
