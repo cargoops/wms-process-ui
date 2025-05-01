@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Typography, Input, Table, Tag, Row, Col, Button, Tabs, Space } from 'antd';
+import api from '../../api/axios';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -62,7 +62,7 @@ export default function MyReceivingPage() {
     const fetchReceivingData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/packages');
+        const res = await api.get('/packages');
         const mapped: ReceivingItem[] = res.data.data.map((item: ApiReceivingItem, idx: number) => ({
           key: idx,
           receivingId: item.storingOrderId,
@@ -84,7 +84,7 @@ export default function MyReceivingPage() {
 
     const fetchDocumentInspectionData = async () => {
       try {
-        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders');
+        const res = await api.get('/storing-orders');
         const raw: StoringOrder[] = res.data.data;
 
         const processed: DocumentInspectionItem[] = raw.flatMap((order: StoringOrder, idx: number) =>

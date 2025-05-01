@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import moment, { Moment } from 'moment';
 import type { RangeValue } from 'rc-picker/lib/interface';
 import { Typography, Input, Table, Tag, DatePicker, Row, Col, Tabs } from 'antd';
+import api from '../../api/axios';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -61,7 +61,7 @@ export default function StoringOrderPage() {
     const fetchStoringOrders = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders');
+        const res = await api.get('/storing-orders');
         const mapped: StoringOrder[] = res.data?.data.map((item: any, idx: number) => ({
           key: idx,
           storingOrderId: item.storingOrderId,
@@ -87,7 +87,7 @@ export default function StoringOrderPage() {
     const fetchReceivingData = async () => {
       setReceivingLoading(true);
       try {
-        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/packages');
+        const res = await api.get('/packages');
         const mapped: ReceivingItem[] = res.data.data.map((item: ApiReceivingItem, idx: number) => ({
           key: idx,
           receivingId: item.storingOrderId,
