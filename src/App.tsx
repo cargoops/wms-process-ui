@@ -16,6 +16,7 @@ import MasterPage from './pages/master';
 // Receiving 하위
 import StoringPage from './pages/receiving/storingorder';
 import MyReceivingPage from './pages/receiving/myreceiving';
+import ReceivingProcessPage from './pages/receiving/receivingprocess';
 
 // Binning 하위
 import BinAssignPage from './pages/binning/binassign';
@@ -40,6 +41,7 @@ export default function App() {
   const menuGroups: Record<string, string> = {
     storing: 'Receiving',
     myreceiving: 'Receiving',
+    receivingprocess: 'Receiving',
     receiving: 'Receiving',
     qc: 'Quality Check',
     binning: 'Binning',
@@ -53,6 +55,7 @@ export default function App() {
   const pageTitles: Record<string, string> = {
     'receiving/storing': 'Storing Order Request List',
     'receiving/myreceiving': 'My Receiving List',
+    'receiving/receivingprocess': 'Receiving Process',
     'binning/assign': 'Bin Assignment List',
     'binning/my': 'My Binning',
     'dispatch/mypacking': 'My Packing',
@@ -92,6 +95,7 @@ export default function App() {
           <Route path="receiving" element={<ReceivingPage />}>
             <Route path="storing" element={<StoringPage />} />
             <Route path="myreceiving" element={<MyReceivingPage />} />
+            <Route path="receivingprocess" element={<ReceivingProcessPage />} />
           </Route>
 
           {/* Quality Check */}

@@ -135,6 +135,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
             <Menu.SubMenu key="receiving" icon={<FormOutlined />} title="Receiving">
               <Menu.Item key="receiving/storing">Storing Order Request</Menu.Item>
               <Menu.Item key="receiving/myreceiving">My Receiving List</Menu.Item>
+              <Menu.Item key="receiving/receivingprocess">Receiving Process</Menu.Item>
             </Menu.SubMenu>
 
             <Menu.Item key="qc" icon={<TableOutlined />}>Quality Check</Menu.Item>
