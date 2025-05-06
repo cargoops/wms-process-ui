@@ -1,63 +1,128 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { message } from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
+import { Typography, Input, Table, Tag, Row, Col, Button, Tabs, Space, message } from 'antd';
 
-export default function ReceivingProcessPage() {
-  const [inputs, setInputs] = useState({
-    storingOrderId: '',
-    airwayBillNumber: '',
-    billOfEntryId: ''
-  });
-  const [step, setStep] = useState<'SO' | 'AWB' | 'BOE'>('SO');
-  const inputRef = useRef<HTMLInputElement>(null);
+const { Title } = Typography;
+const { Search } = Input;
+const { TabPane } = Tabs;
 
-  // ✅ 최초 렌더링 시 input에 자동 포커스
+interface ReceivingItem {
+  key: number;
+  receivingId: string;
+  packageId: string;
+  barcode: string;
+  productId: string;
+  receiverId: string;
+  receivedDate: string;
+  dimensions: string;
+  status: string;
+}
+
+interface ApiReceivingItem {
+  packageId: string;
+  breadth: string;
+  storing_order_id: string;
+  width: string;
+  height: string;
+  status: string;
+  product_id: string;
+  receiver_id?: string;
+  received_date?: string;
+}
+
+interface DocumentInspectionItem {
+  key: string;
+  storingOrderId: string;
+  packageId: string;
+  result: string;
+  discrepancy: string;
+  receivedDate: string;
+}
+
+interface StoringOrder {
+  orderDate: string;
+  documentInspectionResult: string;
+  storingOrderId: string;
+  billOfEntryId: string;
+  status: string;
+  airwayBillNumber: string;
+  packages: string[];
+  invoiceNumber: string;
+  customerId: string;
+}
+
+export default function MyReceivingPage() {
+  const [receivingData, setReceivingData] = useState<ReceivingItem[]>([]);
+  const [documentInspectionData, setDocumentInspectionData] = useState<DocumentInspectionItem[]>([]);
+  const [editedDiscrepancies, setEditedDiscrepancies] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [activeStoringOrderId, setActiveStoringOrderId] = useState<string | null>(null);
+  const [openedInspectionTabs, setOpenedInspectionTabs] = useState<string[]>([]);
+
+  const [so, setSo] = useState('');
+  const [awb, setAwb] = useState('');
+  const [boe, setBoe] = useState('');
+
+  const soRef = useRef(null);
+  const awbRef = useRef(null);
+  const boeRef = useRef(null);
+
   useEffect(() => {
-    inputRef.current?.focus();
+    const fetchReceivingData = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/packages');
+        const mapped: ReceivingItem[] = res.data.data.map((item: ApiReceivingItem, idx: number) => ({
+          key: idx,
+          receivingId: item.storing_order_id,
+          packageId: item.packageId,
+          barcode: `BAR-${item.packageId}`,
+          productId: item.product_id,
+          receiverId: item.receiver_id ?? 'emp-001',
+          receivedDate: item.received_date ?? new Date().toLocaleString(),
+          dimensions: `${item.height} * ${item.width} * ${item.breadth}`,
+          status: item.status,
+        }));
+        setReceivingData(mapped);
+      } catch (e) {
+        console.error('❌ 입고 목록 불러오기 실패:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchDocumentInspectionData = async () => {
+      try {
+        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders');
+        const raw: StoringOrder[] = res.data.data;
+
+        const processed: DocumentInspectionItem[] = raw.flatMap((order: StoringOrder, idx: number) =>
+          order.packages.map((pkgId: string, pkgIdx: number) => ({
+            key: `${order.storingOrderId}-${pkgIdx}`,
+            storingOrderId: order.storingOrderId,
+            packageId: pkgId,
+            result: order.documentInspectionResult,
+            discrepancy: order.documentInspectionResult === 'PASS' ? '-' : '',
+            receivedDate: order.orderDate,
+          }))
+        );
+
+        setDocumentInspectionData(processed);
+      } catch (e) {
+        console.error('❌ 문서검사 데이터 불러오기 실패:', e);
+      }
+    };
+
+    fetchReceivingData();
+    fetchDocumentInspectionData();
   }, []);
 
-  // ✅ 바코드 처리 함수
-  const handleBarcode = (value: string) => {
-    if (!value) return;
-
-    if (step === 'SO' && value.startsWith('SO')) {
-      setInputs(prev => ({ ...prev, storingOrderId: value }));
-      setStep('AWB');
-      message.success('✅ SO 입력 완료');
-    } else if (step === 'AWB' && value.startsWith('AWB')) {
-      setInputs(prev => ({ ...prev, airwayBillNumber: value }));
-      setStep('BOE');
-      message.success('✅ AWB 입력 완료');
-    } else if (step === 'BOE' && value.startsWith('BOE')) {
-      setInputs(prev => ({ ...prev, billOfEntryId: value }));
-      message.success('✅ BOE 입력 완료! 전송 준비 중...');
-      setTimeout(() => {
-        sendToScannerAPI();
-      }, 400);
-    } else {
-      message.warning(`⚠️ ${step} 순서에 맞는 바코드를 입력하세요`);
-    }
-
-    // 입력창 비우고 포커스 유지
-    if (inputRef.current) {
-      inputRef.current.value = '';
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  };
-
-  // ✅ 입력 시 Enter 처리 포함
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      const raw = e.currentTarget.value.trim();
-      const value = raw.replace(/[\r\n]/g, '');
-      handleBarcode(value);
-    }
-  };
-
-
-  // ✅ API 전송
   const sendToScannerAPI = async () => {
-    const { storingOrderId, airwayBillNumber, billOfEntryId } = inputs;
-    const payload = { storingOrderId, airwayBillNumber, billOfEntryId };
+    const payload = {
+      storingOrderId: so,
+      airwayBillNumber: awb,
+      billOfEntryId: boe
+    };
 
     try {
       const res = await fetch("https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/dev/scanner", {
@@ -71,9 +136,7 @@ export default function ReceivingProcessPage() {
       const data = await res.json();
       if (res.ok) {
         message.success("🚀 전송 완료!");
-        setInputs({ storingOrderId: '', airwayBillNumber: '', billOfEntryId: '' });
-        setStep('SO');
-        setTimeout(() => inputRef.current?.focus(), 100);
+        setSo(''); setAwb(''); setBoe('');
       } else {
         message.error("❌ 전송 실패: " + (data?.error || 'Unknown error'));
       }
@@ -83,33 +146,64 @@ export default function ReceivingProcessPage() {
     }
   };
 
+  const handleDiscrepancyChange = (key: string, value: string) => {
+    setEditedDiscrepancies((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleSaveDiscrepancy = (key: string) => {
+    const newVal = editedDiscrepancies[key] ?? '';
+    setDocumentInspectionData((prev) =>
+      prev.map((item) =>
+        item.key === key ? { ...item, discrepancy: newVal } : item
+      )
+    );
+  };
+
+  const handleOpenTab = (soId: string) => {
+    setOpenedInspectionTabs((prev) => (prev.includes(soId) ? prev : [...prev, soId]));
+    setActiveStoringOrderId(soId);
+  };
+
   return (
-    <div style={{ maxWidth: 600, margin: '2rem auto', fontFamily: 'sans-serif' }}>
-      <h2>📦 바코드 스캔 (SO → AWB → BOE)</h2>
-
-      <div style={{ marginBottom: '1rem' }}>
-        <strong>현재 단계:</strong> <span style={{ color: '#1677ff' }}>{step}</span>
+    <>
+      <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
+        <Row gutter={16} align="middle">
+          <Col><label>Package ID</label><Search placeholder="Search Package ID" enterButton /></Col>
+          <Col><label>Status</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button type="primary">All</Button>
+              <Button>In Progress</Button>
+              <Button>Ready for TQ</Button>
+            </div>
+          </Col>
+        </Row>
       </div>
 
-      <div style={{ marginBottom: '1rem' }}>
-        <div>✅ SO: {inputs.storingOrderId || <em>미입력</em>}</div>
-        <div>✅ AWB: {inputs.airwayBillNumber || <em>미입력</em>}</div>
-        <div>✅ BOE: {inputs.billOfEntryId || <em>미입력</em>}</div>
+      <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
+        <Title level={5}>📥 바코드 입력</Title>
+        <Row gutter={[16, 16]}>
+          <Col span={8}><Input ref={soRef} value={so} onChange={e => setSo(e.target.value)} placeholder="SO" /></Col>
+          <Col span={8}><Input ref={awbRef} value={awb} onChange={e => setAwb(e.target.value)} placeholder="AWB" /></Col>
+          <Col span={8}><Input ref={boeRef} value={boe} onChange={e => setBoe(e.target.value)} placeholder="BOE" /></Col>
+        </Row>
+        <Button type="primary" style={{ marginTop: 16 }} onClick={sendToScannerAPI}>전송</Button>
       </div>
 
-      <input
-        ref={inputRef}
-        onKeyDown={handleKeyDown}
-        placeholder="바코드를 스캔하거나 입력 후 Enter"
-        autoFocus
-        style={{
-          width: '100%',
-          padding: '10px',
-          fontSize: '16px',
-          border: '1px solid #ccc',
-          borderRadius: '4px'
-        }}
-      />
-    </div>
+      {openedInspectionTabs.length > 0 && (
+        <div style={{ background: '#fff', padding: 24 }}>
+          <Title level={5}>Document Inspection</Title>
+          <Tabs activeKey={activeStoringOrderId ?? ''} onChange={(key) => setActiveStoringOrderId(key)} type="card">
+            {openedInspectionTabs.map((id) => (
+              <TabPane tab={id} key={id}>
+                <Table columns={[]} dataSource={[]} pagination={false} />
+              </TabPane>
+            ))}
+          </Tabs>
+        </div>
+      )}
+    </>
   );
 }
