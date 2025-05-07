@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import 'antd/dist/antd.css';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './layout/applayout';
+
+// 로그인/역할 페이지
+import LoginPage from './pages/login/login';
+import RoleSelectPage from './pages/login/roles';
+import PrivateRoute from './components/privateroute';
 
 // 상위 페이지
 import DashboardPage from './pages/dashboard';
@@ -37,6 +42,7 @@ import PickSlipPage from './pages/picking/pickslip';
 export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const menuGroups: Record<string, string> = {
     storing: 'Receiving',
@@ -72,59 +78,63 @@ export default function App() {
   return (
     <Router>
       <Routes>
+        {/* 로그인 페이지 */}
+        <Route path="/login" element={<LoginPage onLogin={() => window.location.hash = '#/roles'} />} />
+
+        {/* 역할 선택 페이지 */}
+        <Route path="/roles" element={<RoleSelectPage onSelectRole={() => setIsAuthenticated(true)} />} />
+
+        {/* 인증된 사용자만 접근 가능한 앱 */}
         <Route
-          path="/"
+          path="/*"
           element={
-            <AppLayout
-              collapsed={collapsed}
-              setCollapsed={setCollapsed}
-              selectedMenu={selectedMenu}
-              setSelectedMenu={setSelectedMenu}
-              menuGroups={menuGroups}
-              pageTitles={pageTitles}
-            />
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <AppLayout
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
+                selectedMenu={selectedMenu}
+                setSelectedMenu={setSelectedMenu}
+                menuGroups={menuGroups}
+                pageTitles={pageTitles}
+              />
+            </PrivateRoute>
           }
         >
           <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
-
-          {/* Master */}
           <Route path="master" element={<MasterPage />} />
 
-          {/* Receiving */}
           <Route path="receiving" element={<ReceivingPage />}>
             <Route path="storing" element={<StoringPage />} />
             <Route path="myreceiving" element={<MyReceivingPage />} />
             <Route path="receivingprocess" element={<ReceivingProcessPage />} />
           </Route>
 
-          {/* Quality Check */}
           <Route path="qc" element={<QCPage />} />
 
-          {/* Binning */}
           <Route path="binning" element={<BinningPage />}>
             <Route path="assign" element={<BinAssignPage />} />
             <Route path="my" element={<MyBinningPage />} />
           </Route>
 
-          {/* Inventory */}
           <Route path="inventory" element={<InventoryPage />}>
             <Route path="management" element={<InventoryMgtPage />} />
             <Route path="reconciliation" element={<InventoryReconPage />} />
           </Route>
 
-          {/* Picking */}
           <Route path="picking" element={<PickingPage />}>
             <Route path="mypicking" element={<MyPickingPage />} />
             <Route path="pickslip" element={<PickSlipPage />} />
           </Route>
 
-          {/* Dispatch */}
           <Route path="dispatch" element={<DispatchPage />}>
             <Route path="mypacking" element={<MyPackingPage />} />
             <Route path="inspection" element={<DispatchInspectionPage />} />
           </Route>
         </Route>
+
+        {/* 잘못된 경로는 로그인으로 리디렉션 */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
