@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { Layout, Menu, Breadcrumb, Typography, Avatar } from 'antd';
 import {
   UserOutlined,
@@ -31,7 +31,6 @@ interface AppLayoutProps {
   pageTitles: Record<string, string>;
 }
 
-//컴포넌트 본문
 const AppLayout: React.FC<AppLayoutProps> = ({
   collapsed,
   setCollapsed,
@@ -40,24 +39,24 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   menuGroups,
   pageTitles,
 }) => {
-  const location = useLocation(); // 현재 경로 추적
-  const navigate = useNavigate(); // 버튼 클릭 등 페이지 이동
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  {/*경로에서 메뉴 키 추출*/}
   const path = location.pathname.slice(1);
   const segments = path.split('/');
   const key = segments.length === 1 ? segments[0] : `${segments[0]}/${segments[1]}`;
 
-  {/*경로 바뀔 때마다 selectMenu 값을 동기화*/}
   useEffect(() => {
     if (location.pathname === '/') {
-      setSelectedMenu('1');
+      setSelectedMenu('dashboard');
+    } else {
+      setSelectedMenu(key);
     }
-  }, [location.pathname, setSelectedMenu, key]);
+  }, [location.pathname]);
 
-  {/*헤더, 사이드바, 메뉴, 브레드크럼 */}
   return (
     <Layout style={{ minHeight: '100vh', paddingTop: 56 }}>
+      {/* 헤더 */}
       <Header
         style={{
           display: 'flex',
@@ -67,7 +66,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           alignItems: 'center',
           background: '#001529',
           boxShadow: 'inset 0px -1px 0px 0px #F0F0F0',
-          flexShrink: 0,
           position: 'fixed',
           top: 0,
           left: 0,
@@ -83,7 +81,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
               d="M13.5492 0.112436C13.8089 -0.0374786 14.1288 -0.0374786 14.3885 0.112436L27.5181 7.69282C27.7777 7.84273 27.9377 8.11979 27.9377 8.41962V23.5804C27.9377 23.8802 27.7777 24.1573 27.5181 24.3072L14.3885 31.8876C14.1288 32.0375 13.8089 32.0375 13.5492 31.8876L0.419631 24.3072C0.159972 24.1573 0 23.8802 0 23.5804V8.41962C0 8.11979 0.159972 7.84273 0.419631 7.69282L13.5492 0.112436ZM25.42 8.41961L13.9689 15.0309L2.51771 8.41961L13.9689 1.80829L25.42 8.41961Z"
               fill="none"
               stroke="#515A48"
-              stroke-width = "2"
+              strokeWidth="2"
             />
           </svg>
           <Text style={{ color: 'white', fontWeight: 700, fontSize: 16 }}>CARGOOPS</Text>
@@ -99,6 +97,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       </Header>
 
       <Layout>
+        {/* 사이드바 */}
         <Sider
           width={220}
           collapsible
@@ -132,13 +131,19 @@ const AppLayout: React.FC<AppLayoutProps> = ({
             <Menu.Item key="dashboard" icon={<DashboardOutlined />}>Dashboard</Menu.Item>
             <Menu.Item key="master" icon={<HighlightOutlined />}>Master</Menu.Item>
 
-            <Menu.SubMenu key="receiving" icon={<FormOutlined />} title="Receiving">
-              <Menu.Item key="receiving/storing">Storing Order Request</Menu.Item>
-              <Menu.Item key="receiving/myreceiving">My Receiving List</Menu.Item>
-              <Menu.Item key="receiving/receivingprocess">Receiving Process</Menu.Item>
+            <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order">
+              <Menu.Item key="storingorder/list">Storing Order List</Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.Item key="qc" icon={<TableOutlined />}>Quality Check</Menu.Item>
+            <Menu.SubMenu key="receiving" icon={<CheckCircleOutlined />} title="Receiving">
+              <Menu.Item key="receiving/soreceiving">SO Receiving</Menu.Item>
+              <Menu.Item key="receiving/list">Receiving List</Menu.Item>
+            </Menu.SubMenu>
+
+            <Menu.SubMenu key="tq" icon={<TableOutlined />} title="Technical Query">
+              <Menu.Item key="tq/package">Package TQ</Menu.Item>
+              <Menu.Item key="tq/list">TQ List</Menu.Item>
+            </Menu.SubMenu>
 
             <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning">
               <Menu.Item key="binning/assign">Bin Assignment</Menu.Item>
@@ -162,7 +167,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           </Menu>
         </Sider>
 
+        {/* 콘텐츠 영역 */}
         <Layout>
+          {/* Breadcrumb */}
           <div style={{ background: '#fff', padding: '16px 24px' }}>
             <Breadcrumb>
               <Breadcrumb.Item>Home</Breadcrumb.Item>
@@ -179,12 +186,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({
             </Breadcrumb>
           </div>
 
+          {/* 페이지 제목 */}
           <div style={{ background: '#fff', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
             <Title level={3} style={{ margin: 0 }}>
               {pageTitles[selectedMenu] || 'Page Title'}
             </Title>
           </div>
 
+          {/* 페이지 콘텐츠 */}
           <Content style={{ padding: 24, background: '#f5f5f5' }}>
             <Outlet />
           </Content>
