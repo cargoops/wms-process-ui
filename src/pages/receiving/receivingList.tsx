@@ -10,7 +10,6 @@ interface ReceivingItem {
   key: number;
   receivingId: string;
   packageId: string;
-  barcode: string;
   productId: string;
   receiverId: string;
   receivedDate: string;
@@ -68,7 +67,6 @@ export default function MyReceivingPage() {
           key: idx,
           receivingId: item.storing_order_id, // ✅ snake_case → camelCase
           packageId: item.packageId,
-          barcode: `BAR-${item.packageId}`,
           productId: item.product_id,
           receiverId: item.receiver_id ?? 'emp-001',
           receivedDate: item.received_date ?? new Date().toLocaleString(),
@@ -175,7 +173,6 @@ export default function MyReceivingPage() {
               ),
             },
             { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
-            { title: 'Barcode', dataIndex: 'barcode', key: 'barcode' },
             { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
             { title: 'Receiver ID', dataIndex: 'receiverId', key: 'receiverId' },
             { title: 'Received Date', dataIndex: 'receivedDate', key: 'receivedDate' },
