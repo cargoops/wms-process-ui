@@ -83,7 +83,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
         {/* 로고 */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <img
-            src="/logo_cargoops.svg"
+            src="/logo_cargoops.png"
             alt="logo"
             style={{ width: 40, marginBottom: 12 }}
           />
