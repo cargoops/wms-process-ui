@@ -8,6 +8,10 @@ import {
   Space,
   Divider
 } from 'antd';
+
+import logo from '../../components/logo_cargoops.png';
+
+
 import {
   UserOutlined,
   LockOutlined,
@@ -83,7 +87,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
         {/* 로고 */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <img
-            src="/logo_cargoops.png"
+            src={logo}
             alt="logo"
             style={{ width: 40, marginBottom: 12 }}
           />
