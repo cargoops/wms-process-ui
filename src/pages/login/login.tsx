@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+// console.log('topLeftPng:', topLeftPng);
+
 import {
   Button,
   Input,
@@ -10,6 +12,9 @@ import {
 } from 'antd';
 
 import logo from '../../components/logo_cargoops.png';
+import topLeftPng from '../../components/Group14_login.png';
+import bottomLeftPng from '../../components/Group18_login.png';
+import topRightPng from '../../components/Group10_login.png';
 
 
 import {
@@ -35,10 +40,10 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', overflow: 'visible' }}>
       {/* 배경 SVG들 */}
       <img
-        src="/Group14_login.svg"
+        src={topLeftPng}
         alt="top-left-decoration"
         style={{
           position: 'absolute',
@@ -46,10 +51,12 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
           left: 0,
           width: 200,
           zIndex: 0,
+          height: 200, 
+          backgroundColor: 'rgba(255,0,0,0.3)'
         }}
       />
       <img
-        src="/Group18_login.svg"
+        src={bottomLeftPng}
         alt="bottom-left-decoration"
         style={{
           position: 'absolute',
@@ -60,7 +67,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
         }}
       />
       <img
-        src="/Group10_login.svg"
+        src={topRightPng}
         alt="top-right-decoration"
         style={{
           position: 'absolute',
