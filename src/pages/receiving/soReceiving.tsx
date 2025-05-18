@@ -30,6 +30,28 @@ export default function ReceivingProcess() {
     soRef.current?.input?.focus();
   }, []);
 
+  const renderStatusBadge = (value: string | number) => {
+    const submitted = value !== '' && value !== null && value !== undefined;
+    return (
+      <span
+        style={{
+          padding: '2px 12px',
+          borderRadius: 4,
+          fontSize: 14,
+          fontWeight: 500,
+          border: submitted ? '1px solid #52c41a' : '1px solid #d9d9d9',
+          color: submitted ? '#389e0d' : '#595959',
+          background: submitted ? '#f6ffed' : '#fafafa',
+          display: 'inline-block',
+          minWidth: 90,
+          textAlign: 'center',
+        }}
+      >
+        {submitted ? '✅ Submitted' : '⬜ Waiting'}
+      </span>
+    );
+  };
+
   const handleSoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSo(e.target.value);
     if (e.target.value.length > 0) {
@@ -91,7 +113,6 @@ export default function ReceivingProcess() {
         });
       } else {
         message.error('❌ 검사 실패 또는 입력 오류');
-
         setResult({
           storingOrderId: so,
           invoiceNumber: doc1,
@@ -102,9 +123,7 @@ export default function ReceivingProcess() {
         });
       }
 
-      setModalVisible(true); // 성공이든 실패든 모달 띄우기
-
-      // 입력 초기화
+      setModalVisible(true);
       setSo('');
       setDoc1('');
       setDoc2('');
@@ -120,13 +139,9 @@ export default function ReceivingProcess() {
   return (
     <div style={{ padding: 24 }}>
       <Card
-        title={<Title level={5} style={{ margin: 0 }}>Receiving New Storing Order</Title>}
+        title={<Title level={5}>Receiving New Storing Order</Title>}
         bordered
-        style={{
-          background: '#fff',
-          width: '100%',
-          boxSizing: 'border-box',
-        }}
+        style={{ background: '#fff', width: '100%' }}
       >
         <p style={{ marginBottom: 24 }}>
           ※ Scan the barcode of 3 documents for inspection (Invoice / Bill of Entry / Airway Bill)
@@ -134,60 +149,78 @@ export default function ReceivingProcess() {
 
         <Form layout="vertical">
           <Form.Item label="Storing Order Barcode:">
-            <Input
-              ref={soRef}
-              value={so}
-              onChange={handleSoChange}
-              placeholder="SO"
-            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Input
+                ref={soRef}
+                value={so}
+                onChange={handleSoChange}
+                placeholder="SO"
+                style={{ flex: 1 }}
+              />
+              {renderStatusBadge(so)}
+            </div>
           </Form.Item>
 
-          <Form.Item label="Document 1 (Invoice):">
-            <Input
-              ref={doc1Ref}
-              value={doc1}
-              onChange={handleDoc1Change}
-              placeholder="INV"
-            />
+          <Form.Item label="Invoice:">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Input
+                ref={doc1Ref}
+                value={doc1}
+                onChange={handleDoc1Change}
+                placeholder="INV"
+                style={{ flex: 1 }}
+              />
+              {renderStatusBadge(doc1)}
+            </div>
           </Form.Item>
 
-          <Form.Item label="Document 2 (Bill of Entry):">
-            <Input
-              ref={doc2Ref}
-              value={doc2}
-              onChange={handleDoc2Change}
-              placeholder="BOE"
-            />
+          <Form.Item label="Bill of Entry:">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Input
+                ref={doc2Ref}
+                value={doc2}
+                onChange={handleDoc2Change}
+                placeholder="BOE"
+                style={{ flex: 1 }}
+              />
+              {renderStatusBadge(doc2)}
+            </div>
           </Form.Item>
 
-          <Form.Item label="Document 3 (Airway Bill):">
-            <Input
-              ref={doc3Ref}
-              value={doc3}
-              onChange={handleDoc3Change}
-              placeholder="AWB"
-            />
+          <Form.Item label="Airway Bill:">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Input
+                ref={doc3Ref}
+                value={doc3}
+                onChange={handleDoc3Change}
+                placeholder="AWB"
+                style={{ flex: 1 }}
+              />
+              {renderStatusBadge(doc3)}
+            </div>
           </Form.Item>
 
-          <Form.Item label="Enter Quantity:">
-            <InputNumber
-              min={1}
-              value={quantity}
-              onChange={(value) => setQuantity(value || 1)}
-              style={{ width: '100%' }}
-              placeholder="Enter quantity"
-            />
+          <Form.Item label="Quantity of Packages:">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <InputNumber
+                min={1}
+                value={quantity}
+                onChange={(value) => setQuantity(value || 1)}
+                style={{ flex: 1 }}
+                placeholder="Enter quantity"
+              />
+              {renderStatusBadge(quantity)}
+            </div>
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" onClick={handleSubmit}>
-              Submit for Inspection
+              Submit
             </Button>
           </Form.Item>
         </Form>
       </Card>
 
-      {/* Modal for PASS / FAIL */}
       <Modal
         title="Inspection Result"
         open={modalVisible}
