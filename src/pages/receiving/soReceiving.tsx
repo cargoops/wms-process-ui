@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Typography, Input, Button, Card, Form, message } from 'antd';
+import {
+  Typography,
+  Input,
+  Button,
+  Card,
+  Form,
+  message,
+  InputNumber,
+} from 'antd';
 
 const { Title } = Typography;
 
@@ -8,6 +16,8 @@ export default function ReceivingProcess() {
   const [doc1, setDoc1] = useState('');
   const [doc2, setDoc2] = useState('');
   const [doc3, setDoc3] = useState('');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [result, setResult] = useState<any>(null);
 
   const soRef = useRef<any>(null);
   const doc1Ref = useRef<any>(null);
@@ -45,20 +55,21 @@ export default function ReceivingProcess() {
 
   const handleSubmit = async () => {
     const payload = {
-      storingOrderId: so,
-      document1: doc1,
-      document2: doc2,
-      document3: doc3,
+      storing_order_id: so,
+      invoice_number: doc1,
+      bill_of_entry_id: doc2,
+      airway_bill_number: doc3,
+      quantity,
     };
 
     try {
       const res = await fetch(
-        'https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-order/check',
+        'https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/receive',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': 'e476717b-e720-4281-8e2f-1c0fdc574342',
+            'Authorization': 'rcv-7fa3d1b2',
           },
           body: JSON.stringify(payload),
         }
@@ -67,14 +78,23 @@ export default function ReceivingProcess() {
       const data = await res.json();
 
       if (res.ok) {
-        message.success('✅ 상태 업데이트 완료!');
+        message.success('✅ 입고 처리 성공');
+        setResult({
+          storingOrderId: so,
+          inspectionResult: 'PASS', // 임시 값. 실제 응답값이 있으면 대체
+          discrepancyDetail: '',
+          receiverId: 'mel.kwon',   // 실제 로그인 유저 정보로 대체 가능
+          receivedDate: new Date().toLocaleString(),
+        });
+
         setSo('');
         setDoc1('');
         setDoc2('');
         setDoc3('');
+        setQuantity(1);
         setTimeout(() => soRef.current?.input?.focus(), 100);
       } else {
-        message.error('❌ 실패: ' + (data?.message || 'Unknown error'));
+        message.error('❌ 오류: ' + (data?.message || 'Unknown error'));
       }
     } catch (err) {
       message.error('❌ 네트워크 오류');
@@ -94,11 +114,11 @@ export default function ReceivingProcess() {
         }}
       >
         <p style={{ marginBottom: 24 }}>
-          ※ Scan the barcode of 3 documents for inspection (Invoice/Bill of Entry/Airway Bill)
+          ※ Scan the barcode of 3 documents for inspection (Invoice / Bill of Entry / Airway Bill)
         </p>
 
         <Form layout="vertical">
-          <Form.Item label="Scan Storing Order Barcode:">
+          <Form.Item label="Storing Order Barcode:">
             <Input
               ref={soRef}
               value={so}
@@ -107,7 +127,7 @@ export default function ReceivingProcess() {
             />
           </Form.Item>
 
-          <Form.Item label="Scan Document 1:">
+          <Form.Item label="Document 1 (Invoice):">
             <Input
               ref={doc1Ref}
               value={doc1}
@@ -116,7 +136,7 @@ export default function ReceivingProcess() {
             />
           </Form.Item>
 
-          <Form.Item label="Scan Document 2:">
+          <Form.Item label="Document 2 (Bill of Entry):">
             <Input
               ref={doc2Ref}
               value={doc2}
@@ -125,22 +145,60 @@ export default function ReceivingProcess() {
             />
           </Form.Item>
 
-          <Form.Item label="Scan Document 3:">
+          <Form.Item label="Document 3 (Airway Bill):">
             <Input
               ref={doc3Ref}
               value={doc3}
               onChange={handleDoc3Change}
-              placeholder="AOB"
+              placeholder="AWB"
+            />
+          </Form.Item>
+
+          <Form.Item label="Enter Quantity:">
+            <InputNumber
+              min={1}
+              value={quantity}
+              onChange={(value) => setQuantity(value || 1)}
+              style={{ width: '100%' }}
+              placeholder="Enter quantity"
             />
           </Form.Item>
 
           <Form.Item>
             <Button type="primary" onClick={handleSubmit}>
-              Submit for Document Inspection
+              Submit for Inspection
             </Button>
           </Form.Item>
         </Form>
       </Card>
+
+      {result && (
+        <div style={{ marginTop: 40 }}>
+          <Title level={5}>Receiving Result</Title>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr>
+                <th>Storing Order ID</th>
+                <th>Package ID</th>
+                <th>Inspection Result</th>
+                <th>Discrepancy Detail</th>
+                <th>Receiver ID</th>
+                <th>Received Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{result.storingOrderId}</td>
+                <td>N/A</td>
+                <td>{result.inspectionResult}</td>
+                <td>{result.discrepancyDetail || 'N/A'}</td>
+                <td>{result.receiverId}</td>
+                <td>{result.receivedDate}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
