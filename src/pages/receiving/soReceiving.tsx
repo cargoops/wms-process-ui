@@ -7,6 +7,7 @@ import {
   Form,
   message,
   InputNumber,
+  Modal,
 } from 'antd';
 
 const { Title } = Typography;
@@ -18,6 +19,7 @@ export default function ReceivingProcess() {
   const [doc3, setDoc3] = useState('');
   const [quantity, setQuantity] = useState<number>(1);
   const [result, setResult] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const soRef = useRef<any>(null);
   const doc1Ref = useRef<any>(null);
@@ -81,21 +83,34 @@ export default function ReceivingProcess() {
         message.success('✅ 입고 처리 성공');
         setResult({
           storingOrderId: so,
-          inspectionResult: 'PASS', // 임시 값. 실제 응답값이 있으면 대체
-          discrepancyDetail: '',
-          receiverId: 'mel.kwon',   // 실제 로그인 유저 정보로 대체 가능
+          invoiceNumber: doc1,
+          billOfEntryId: doc2,
+          airwayBillNumber: doc3,
+          inspectionResult: 'Pass ✅',
           receivedDate: new Date().toLocaleString(),
         });
-
-        setSo('');
-        setDoc1('');
-        setDoc2('');
-        setDoc3('');
-        setQuantity(1);
-        setTimeout(() => soRef.current?.input?.focus(), 100);
       } else {
-        message.error('❌ 오류: ' + (data?.message || 'Unknown error'));
+        message.error('❌ 검사 실패 또는 입력 오류');
+
+        setResult({
+          storingOrderId: so,
+          invoiceNumber: doc1,
+          billOfEntryId: doc2,
+          airwayBillNumber: doc3,
+          inspectionResult: 'Fail ❌',
+          discrepancyDetail: data?.discrepancy_detail || '',
+        });
       }
+
+      setModalVisible(true); // 성공이든 실패든 모달 띄우기
+
+      // 입력 초기화
+      setSo('');
+      setDoc1('');
+      setDoc2('');
+      setDoc3('');
+      setQuantity(1);
+      setTimeout(() => soRef.current?.input?.focus(), 100);
     } catch (err) {
       message.error('❌ 네트워크 오류');
       console.error(err);
@@ -172,33 +187,35 @@ export default function ReceivingProcess() {
         </Form>
       </Card>
 
-      {result && (
-        <div style={{ marginTop: 40 }}>
-          <Title level={5}>Receiving Result</Title>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr>
-                <th>Storing Order ID</th>
-                <th>Package ID</th>
-                <th>Inspection Result</th>
-                <th>Discrepancy Detail</th>
-                <th>Receiver ID</th>
-                <th>Received Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{result.storingOrderId}</td>
-                <td>N/A</td>
-                <td>{result.inspectionResult}</td>
-                <td>{result.discrepancyDetail || 'N/A'}</td>
-                <td>{result.receiverId}</td>
-                <td>{result.receivedDate}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Modal for PASS / FAIL */}
+      <Modal
+        title="Inspection Result"
+        open={modalVisible}
+        onOk={() => setModalVisible(false)}
+        onCancel={() => setModalVisible(false)}
+        centered
+      >
+        <p>
+          Result:{' '}
+          <span
+            style={{
+              color: result?.inspectionResult === 'Pass ✅' ? 'green' : 'red',
+              fontWeight: 600,
+            }}
+          >
+            {result?.inspectionResult}
+          </span>
+        </p>
+        <p>Storing Order ID: {result?.storingOrderId}</p>
+        <p>Invoice: {result?.invoiceNumber}</p>
+        <p>BOE: {result?.billOfEntryId}</p>
+        <p>AWB: {result?.airwayBillNumber}</p>
+        {result?.discrepancyDetail && (
+          <p style={{ color: 'red' }}>
+            Discrepancy: {result.discrepancyDetail}
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }
