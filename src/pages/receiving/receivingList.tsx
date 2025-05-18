@@ -62,10 +62,18 @@ export default function MyReceivingPage() {
     const fetchReceivingData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/packages');
+        const res = await axios.get(
+          'https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/packages',
+          {
+            headers: {
+              'x-api-key': 'adm-12345678',
+            },
+          }
+        );
+        console.log('✅ 입고 데이터 불러오기 성공:', res.data);
         const mapped: ReceivingItem[] = res.data.data.map((item: ApiReceivingItem, idx: number) => ({
           key: idx,
-          receivingId: item.storing_order_id, // ✅ snake_case → camelCase
+          receivingId: item.storing_order_id,
           packageId: item.packageId,
           productId: item.product_id,
           receiverId: item.receiver_id ?? 'emp-001',
@@ -75,7 +83,11 @@ export default function MyReceivingPage() {
         }));
         setReceivingData(mapped);
       } catch (e) {
-        console.error('❌ 입고 목록 불러오기 실패:', e);
+        if (axios.isAxiosError(e)) {
+          console.error('❌ 입고 목록 불러오기 실패:', e.response?.status, e.response?.data);
+        } else {
+          console.error('❌ 입고 목록 불러오기 실패 (기타 오류):', e);
+        }
       } finally {
         setLoading(false);
       }
@@ -83,7 +95,15 @@ export default function MyReceivingPage() {
 
     const fetchDocumentInspectionData = async () => {
       try {
-        const res = await axios.get('https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders');
+        const res = await axios.get(
+          'https://kmoj7dnkpg.execute-api.us-east-2.amazonaws.com/Prod/storing-orders',
+          {
+            headers: {
+              'x-api-key': 'adm-12345678',
+            },
+          }
+        );
+        console.log('✅ 문서 검사 데이터 불러오기 성공:', res.data);
         const raw: StoringOrder[] = res.data.data;
 
         const processed: DocumentInspectionItem[] = raw.flatMap((order: StoringOrder, idx: number) =>
@@ -99,7 +119,11 @@ export default function MyReceivingPage() {
 
         setDocumentInspectionData(processed);
       } catch (e) {
-        console.error('❌ 문서검사 데이터 불러오기 실패:', e);
+        if (axios.isAxiosError(e)) {
+          console.error('❌ 문서검사 데이터 불러오기 실패:', e.response?.status, e.response?.data);
+        } else {
+          console.error('❌ 문서검사 데이터 불러오기 실패 (기타 오류):', e);
+        }
       }
     };
 

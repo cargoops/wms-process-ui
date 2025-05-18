@@ -91,8 +91,6 @@ export default function App() {
                 setCollapsed={setCollapsed}
                 selectedMenu={selectedMenu}
                 setSelectedMenu={setSelectedMenu}
-                menuGroups={menuGroups}
-                pageTitles={pageTitles}
               />
             </PrivateRoute>
           }

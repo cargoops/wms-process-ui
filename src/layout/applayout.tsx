@@ -22,13 +22,29 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 const { Header, Sider, Content } = Layout;
 const { Text, Title } = Typography;
 
+const menuTitleMap: Record<string, string> = {
+  dashboard: 'Dashboard',
+  master: 'Master',
+  'storingorder/list': 'Storing Order List',
+  'receiving/soreceiving': 'SO Receiving',
+  'receiving/list': 'Receiving List',
+  'tq/package': 'Package Technical Query',
+  'tq/list': 'TQ List',
+  'binning/assign': 'Bin Assignment',
+  'binning/my': 'My Binning',
+  'inventory/management': 'Inventory Management',
+  'inventory/reconciliation': 'Inventory Reconciliation',
+  'picking/mypicking': 'My Picking',
+  'picking/pickslip': 'Pick Slip',
+  'dispatch/mypacking': 'My Packing',
+  'dispatch/inspection': 'Dispatch Inspection',
+};
+
 interface AppLayoutProps {
   collapsed: boolean;
   setCollapsed: (val: boolean) => void;
   selectedMenu: string;
   setSelectedMenu: (val: string) => void;
-  menuGroups: Record<string, string>;
-  pageTitles: Record<string, string>;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({
@@ -36,8 +52,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   setCollapsed,
   selectedMenu,
   setSelectedMenu,
-  menuGroups,
-  pageTitles,
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,6 +67,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       setSelectedMenu(key);
     }
   }, [location.pathname]);
+
+  const resolvedPageTitle = menuTitleMap[selectedMenu] || menuTitleMap[key] || 'Page Title';
 
   return (
     <Layout style={{ minHeight: '100vh', paddingTop: 56 }}>
@@ -105,16 +121,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           trigger={null}
           style={{ background: '#fff', borderRight: '1px solid #f0f0f0' }}
         >
-          <div
-            style={{
-              height: 64,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 16px',
-              gap: 8,
-            }}
-          >
+          <div style={{ height: 64, display: 'flex', alignItems: 'center', padding: '0 16px' }}>
             <div onClick={() => setCollapsed(!collapsed)} style={{ cursor: 'pointer' }}>
               {collapsed ? <MenuUnfoldOutlined style={{ fontSize: 18 }} /> : <MenuFoldOutlined style={{ fontSize: 18 }} />}
             </div>
@@ -130,36 +137,29 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           >
             <Menu.Item key="dashboard" icon={<DashboardOutlined />}>Dashboard</Menu.Item>
             <Menu.Item key="master" icon={<HighlightOutlined />}>Master</Menu.Item>
-
             <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order">
               <Menu.Item key="storingorder/list">Storing Order List</Menu.Item>
             </Menu.SubMenu>
-
             <Menu.SubMenu key="receiving" icon={<CheckCircleOutlined />} title="Receiving">
               <Menu.Item key="receiving/soreceiving">SO Receiving</Menu.Item>
               <Menu.Item key="receiving/list">Receiving List</Menu.Item>
             </Menu.SubMenu>
-
             <Menu.SubMenu key="tq" icon={<TableOutlined />} title="Technical Query">
               <Menu.Item key="tq/package">Package TQ</Menu.Item>
               <Menu.Item key="tq/list">TQ List</Menu.Item>
             </Menu.SubMenu>
-
             <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning">
               <Menu.Item key="binning/assign">Bin Assignment</Menu.Item>
               <Menu.Item key="binning/my">My Binning</Menu.Item>
             </Menu.SubMenu>
-
             <Menu.SubMenu key="inventory" icon={<CheckCircleOutlined />} title="Inventory">
               <Menu.Item key="inventory/management">Inventory Management</Menu.Item>
               <Menu.Item key="inventory/reconciliation">Inventory Reconciliation</Menu.Item>
             </Menu.SubMenu>
-
             <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking">
               <Menu.Item key="picking/mypicking">My Picking</Menu.Item>
               <Menu.Item key="picking/pickslip">Pick Slip</Menu.Item>
             </Menu.SubMenu>
-
             <Menu.SubMenu key="dispatch" icon={<SendOutlined />} title="Dispatch">
               <Menu.Item key="dispatch/mypacking">My Packing</Menu.Item>
               <Menu.Item key="dispatch/inspection">Dispatch Inspection</Menu.Item>
@@ -169,31 +169,26 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
         {/* 콘텐츠 영역 */}
         <Layout>
-          {/* Breadcrumb */}
           <div style={{ background: '#fff', padding: '16px 24px' }}>
             <Breadcrumb>
               <Breadcrumb.Item>Home</Breadcrumb.Item>
               {segments.length >= 1 && segments[0] && (
                 <Breadcrumb.Item>
-                  {menuGroups[segments[0]] || pageTitles[segments[0]] || segments[0]}
+                  {menuTitleMap[segments[0]] || segments[0]}
                 </Breadcrumb.Item>
               )}
               {segments.length === 2 && segments[1] && (
                 <Breadcrumb.Item>
-                  {pageTitles[`${segments[0]}/${segments[1]}`] || segments[1]}
+                  {menuTitleMap[`${segments[0]}/${segments[1]}`] || segments[1]}
                 </Breadcrumb.Item>
               )}
             </Breadcrumb>
           </div>
 
-          {/* 페이지 제목 */}
           <div style={{ background: '#fff', padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
-            <Title level={3} style={{ margin: 0 }}>
-              {pageTitles[selectedMenu] || 'Page Title'}
-            </Title>
+            <Title level={3} style={{ margin: 0 }}>{resolvedPageTitle}</Title>
           </div>
 
-          {/* 페이지 콘텐츠 */}
           <Content style={{ padding: 24, background: '#f5f5f5' }}>
             <Outlet />
           </Content>
