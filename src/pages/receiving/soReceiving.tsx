@@ -19,7 +19,7 @@ export default function ReceivingProcess() {
   const [doc1, setDoc1] = useState('');
   const [doc2, setDoc2] = useState('');
   const [doc3, setDoc3] = useState('');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number | null>(null);
   const [result, setResult] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
@@ -49,9 +49,9 @@ export default function ReceivingProcess() {
       const list = Array.isArray(res.data.data) ? res.data.data : [];
       const match = list.find((o: any) => o.storing_order_id === id);
       setOrders(match ? [match] : []);
-      if (match?.discrepancy_detail) {
+      if (match) {
         setEditingDiscrepancies({
-          [match.storing_order_id]: match.discrepancy_detail,
+          [match.storing_order_id]: match.discrepancy_detail ?? ''
         });
       }
     } catch (err) {
@@ -72,12 +72,19 @@ export default function ReceivingProcess() {
   const handleSaveDiscrepancy = async (soId: string) => {
     const value = editingDiscrepancies[soId] || '';
     try {
-      // 👇 여기에 실제 API 붙여주시면 됩니다
-      console.log(`Saving discrepancy for ${soId}:`, value);
-
-      // 예시:
-      // await axios.patch(`.../storing-orders/${soId}/discrepancy`, { discrepancy_detail: value });
-
+      await axios.put(
+        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/discrepancy`,
+        {
+          storing_order_id: soId,
+          discrepancy_detail: value,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'rcv-7fa3d1b2',
+          },
+        }
+      );
       message.success(`✅ Saved for ${soId}`);
     } catch (err) {
       message.error('❌ Save failed');
@@ -85,7 +92,7 @@ export default function ReceivingProcess() {
     }
   };
 
-  const renderStatusBadge = (value: string | number) => {
+  const renderStatusBadge = (value: string | number | null) => {
     const submitted = value !== '' && value !== null && value !== undefined;
     return (
       <span
@@ -107,38 +114,13 @@ export default function ReceivingProcess() {
     );
   };
 
-  const handleSoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSo(e.target.value);
-    if (e.target.value.length > 0) {
-      setTimeout(() => doc1Ref.current?.input?.focus(), 100);
-    }
-  };
-
-  const handleDoc1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDoc1(e.target.value);
-    if (e.target.value.length > 0) {
-      setTimeout(() => doc2Ref.current?.input?.focus(), 100);
-    }
-  };
-
-  const handleDoc2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDoc2(e.target.value);
-    if (e.target.value.length > 0) {
-      setTimeout(() => doc3Ref.current?.input?.focus(), 100);
-    }
-  };
-
-  const handleDoc3Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDoc3(e.target.value);
-  };
-
   const handleSubmit = async () => {
     const payload = {
       storing_order_id: so,
       invoice_number: doc1,
       bill_of_entry_id: doc2,
       airway_bill_number: doc3,
-      quantity,
+      quantity: quantity ?? 1,
     };
 
     try {
@@ -148,7 +130,7 @@ export default function ReceivingProcess() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'rcv-7fa3d1b2',
+            Authorization: 'rcv-7fa3d1b2',
           },
           body: JSON.stringify(payload),
         }
@@ -166,7 +148,6 @@ export default function ReceivingProcess() {
           inspectionResult: 'Pass ✅',
           receivedDate: new Date().toLocaleString(),
         });
-
         await fetchStoringOrderById(so);
       } else {
         message.error('❌ 검사 실패 또는 입력 오류');
@@ -185,7 +166,7 @@ export default function ReceivingProcess() {
       setDoc1('');
       setDoc2('');
       setDoc3('');
-      setQuantity(1);
+      setQuantity(null);
       setTimeout(() => soRef.current?.input?.focus(), 100);
     } catch (err) {
       message.error('❌ 네트워크 오류');
@@ -217,11 +198,11 @@ export default function ReceivingProcess() {
       title: 'Discrepancy Detail',
       key: 'discrepancy_detail',
       render: (_: any, record: any) => {
-        const value = editingDiscrepancies[record.storing_order_id] ?? '';
+        const value = editingDiscrepancies[record.storing_order_id];
         return (
           <div style={{ display: 'flex', gap: 8 }}>
             <Input
-              value={value}
+              value={value === undefined ? '' : value}
               onChange={(e) => handleDiscrepancyChange(record.storing_order_id, e.target.value)}
               placeholder="Enter detail"
               size="small"
@@ -270,9 +251,15 @@ export default function ReceivingProcess() {
               <Input
                 ref={soRef}
                 value={so}
-                onChange={handleSoChange}
+                onChange={(e) => {
+                  setSo(e.target.value);
+                  if (e.target.value.trim()) {
+                    setTimeout(() => doc1Ref.current?.focus(), 100);
+                  }
+                }}
                 placeholder="SO"
                 style={{ flex: 1 }}
+                onPressEnter={() => doc1Ref.current?.focus()}
               />
               {renderStatusBadge(so)}
             </div>
@@ -283,9 +270,15 @@ export default function ReceivingProcess() {
               <Input
                 ref={doc1Ref}
                 value={doc1}
-                onChange={handleDoc1Change}
+                onChange={(e) => {
+                  setDoc1(e.target.value);
+                  if (e.target.value.trim()) {
+                    setTimeout(() => doc2Ref.current?.focus(), 100);
+                  }
+                }}
                 placeholder="INV"
                 style={{ flex: 1 }}
+                onPressEnter={() => doc2Ref.current?.focus()}
               />
               {renderStatusBadge(doc1)}
             </div>
@@ -296,9 +289,15 @@ export default function ReceivingProcess() {
               <Input
                 ref={doc2Ref}
                 value={doc2}
-                onChange={handleDoc2Change}
+                onChange={(e) => {
+                  setDoc2(e.target.value);
+                  if (e.target.value.trim()) {
+                    setTimeout(() => doc3Ref.current?.focus(), 100);
+                  }
+                }}
                 placeholder="BOE"
                 style={{ flex: 1 }}
+                onPressEnter={() => doc3Ref.current?.focus()}
               />
               {renderStatusBadge(doc2)}
             </div>
@@ -309,9 +308,21 @@ export default function ReceivingProcess() {
               <Input
                 ref={doc3Ref}
                 value={doc3}
-                onChange={handleDoc3Change}
+                onChange={(e) => {
+                  setDoc3(e.target.value);
+                  if (e.target.value.trim()) {
+                    setTimeout(() => {
+                      const quantityInput = document.getElementById('quantity-input');
+                      quantityInput?.focus();
+                    }, 100);
+                  }
+                }}
                 placeholder="AWB"
                 style={{ flex: 1 }}
+                onPressEnter={() => {
+                  const quantityInput = document.getElementById('quantity-input');
+                  quantityInput?.focus();
+                }}
               />
               {renderStatusBadge(doc3)}
             </div>
@@ -320,11 +331,12 @@ export default function ReceivingProcess() {
           <Form.Item label="Quantity of Packages:">
             <div style={{ display: 'flex', gap: 8 }}>
               <InputNumber
-                min={1}
+                id="quantity-input"
                 value={quantity}
-                onChange={(value) => setQuantity(value || 1)}
+                onChange={(value) => setQuantity(value ?? null)}
                 style={{ flex: 1 }}
                 placeholder="Enter quantity"
+                onPressEnter={handleSubmit}
               />
               {renderStatusBadge(quantity)}
             </div>
