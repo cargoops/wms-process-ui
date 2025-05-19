@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Typography, Input, Table, Tag, Row, Col, Button, Space } from 'antd';
+import { Typography, Input, Table, Tag, Row, Col } from 'antd';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -29,6 +29,8 @@ interface StoringOrderRow {
   discrepancy: string;
   packages: string[];
   receivedDate: string;
+  status: string;
+  receiverId: string;
 }
 
 export default function MyReceivingPage() {
@@ -54,9 +56,14 @@ export default function MyReceivingPage() {
           key: order.storing_order_id,
           storingOrderId: order.storing_order_id,
           result: order.doc_inspection_result,
-          discrepancy: order.doc_inspection_result === 'PASS' ? '-' : order.discrepancy_detail || '',
-          packages: order.packages ? order.packages.replace(/[\[\]]/g, '').split(';') : [],
+          discrepancy:
+            order.doc_inspection_result === 'PASS' ? '-' : order.discrepancy_detail || '',
+          packages: order.packages
+            ? order.packages.replace(/[\[\]]/g, '').split(';')
+            : [],
           receivedDate: order.received_date || order.order_date,
+          status: order.status,
+          receiverId: order.receiver_id,
         }));
 
         setStoringOrders(processed);
@@ -107,11 +114,38 @@ export default function MyReceivingPage() {
               ),
             },
             { title: 'Received Date', dataIndex: 'receivedDate', key: 'receivedDate' },
+            {
+              title: 'Status',
+              dataIndex: 'status',
+              key: 'status',
+              render: (status: string) => {
+                let color: string;
+                switch (status) {
+                  case 'INSPECTION-FAILED':
+                    color = 'red';
+                    break;
+                  case 'OPEN':
+                    color = 'blue';
+                    break;
+                  case 'RECEIVED':
+                    color = 'green';
+                    break;
+                  default:
+                    color = 'default';
+                }
+                return <Tag color={color}>{status}</Tag>;
+              },
+            },
+            {
+              title: 'Employee ID',
+              dataIndex: 'receiverId',
+              key: 'receiverId',
+            },
           ]}
           dataSource={storingOrders}
           loading={loading}
           pagination={{ pageSize: 6 }}
-          scroll={{ x: 'max-content' }} // 가로 스크롤 허용
+          scroll={{ x: 'max-content' }}
         />
       </div>
     </>

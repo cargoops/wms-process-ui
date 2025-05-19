@@ -8,7 +8,9 @@ import {
   message,
   InputNumber,
   Modal,
+  Table,
 } from 'antd';
+import axios from 'axios';
 
 const { Title } = Typography;
 
@@ -20,6 +22,9 @@ export default function ReceivingProcess() {
   const [quantity, setQuantity] = useState<number>(1);
   const [result, setResult] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editingDiscrepancies, setEditingDiscrepancies] = useState<Record<string, string>>({});
 
   const soRef = useRef<any>(null);
   const doc1Ref = useRef<any>(null);
@@ -29,6 +34,56 @@ export default function ReceivingProcess() {
   useEffect(() => {
     soRef.current?.input?.focus();
   }, []);
+
+  const fetchStoringOrderById = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders`,
+        {
+          headers: {
+            Authorization: 'adm',
+          },
+        }
+      );
+      const list = Array.isArray(res.data.data) ? res.data.data : [];
+      const match = list.find((o: any) => o.storing_order_id === id);
+      setOrders(match ? [match] : []);
+      if (match?.discrepancy_detail) {
+        setEditingDiscrepancies({
+          [match.storing_order_id]: match.discrepancy_detail,
+        });
+      }
+    } catch (err) {
+      message.error('❌ SO 데이터 조회 실패');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDiscrepancyChange = (soId: string, value: string) => {
+    setEditingDiscrepancies((prev) => ({
+      ...prev,
+      [soId]: value,
+    }));
+  };
+
+  const handleSaveDiscrepancy = async (soId: string) => {
+    const value = editingDiscrepancies[soId] || '';
+    try {
+      // 👇 여기에 실제 API 붙여주시면 됩니다
+      console.log(`Saving discrepancy for ${soId}:`, value);
+
+      // 예시:
+      // await axios.patch(`.../storing-orders/${soId}/discrepancy`, { discrepancy_detail: value });
+
+      message.success(`✅ Saved for ${soId}`);
+    } catch (err) {
+      message.error('❌ Save failed');
+      console.error(err);
+    }
+  };
 
   const renderStatusBadge = (value: string | number) => {
     const submitted = value !== '' && value !== null && value !== undefined;
@@ -111,6 +166,8 @@ export default function ReceivingProcess() {
           inspectionResult: 'Pass ✅',
           receivedDate: new Date().toLocaleString(),
         });
+
+        await fetchStoringOrderById(so);
       } else {
         message.error('❌ 검사 실패 또는 입력 오류');
         setResult({
@@ -136,12 +193,72 @@ export default function ReceivingProcess() {
     }
   };
 
+  const columns = [
+    {
+      title: 'Storing Order ID',
+      dataIndex: 'storing_order_id',
+      key: 'storing_order_id',
+    },
+    {
+      title: 'Received Quantity',
+      dataIndex: 'package_quantity',
+      key: 'package_quantity',
+    },
+    {
+      title: 'Inspection Result',
+      key: 'inspection_result',
+      render: (_: any, record: any) => {
+        return result?.storingOrderId === record.storing_order_id
+          ? result?.inspectionResult
+          : null;
+      },
+    },
+    {
+      title: 'Discrepancy Detail',
+      key: 'discrepancy_detail',
+      render: (_: any, record: any) => {
+        const value = editingDiscrepancies[record.storing_order_id] ?? '';
+        return (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Input
+              value={value}
+              onChange={(e) => handleDiscrepancyChange(record.storing_order_id, e.target.value)}
+              placeholder="Enter detail"
+              size="small"
+            />
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => handleSaveDiscrepancy(record.storing_order_id)}
+            >
+              Save
+            </Button>
+          </div>
+        );
+      },
+    },
+    {
+      title: 'Employee Name',
+      render: () => 'Michelle Sohn',
+    },
+    {
+      title: 'Employee ID',
+      dataIndex: 'receiver_id',
+      key: 'receiver_id',
+    },
+    {
+      title: 'Received Date',
+      dataIndex: 'received_date',
+      key: 'received_date',
+    },
+  ];
+
   return (
     <div style={{ padding: 24 }}>
       <Card
         title={<Title level={5}>Receiving New Storing Order</Title>}
         bordered
-        style={{ background: '#fff', width: '100%' }}
+        style={{ background: '#fff', width: '100%', marginBottom: 32 }}
       >
         <p style={{ marginBottom: 24 }}>
           ※ Scan the barcode of 3 documents for inspection (Invoice / Bill of Entry / Airway Bill)
@@ -219,6 +336,16 @@ export default function ReceivingProcess() {
             </Button>
           </Form.Item>
         </Form>
+      </Card>
+
+      <Card title={<Title level={5}>Receiving Result</Title>} bordered>
+        <Table
+          columns={columns}
+          dataSource={orders}
+          loading={loading}
+          rowKey="storing_order_id"
+          pagination={{ pageSize: 10 }}
+        />
       </Card>
 
       <Modal
