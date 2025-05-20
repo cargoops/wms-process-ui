@@ -1,47 +1,70 @@
 import React, { useState } from 'react';
-// console.log('topLeftPng:', topLeftPng);
-
 import {
   Button,
   Input,
-  Checkbox,
   Typography,
   Card,
   Space,
-  Divider
+  Divider,
+  message,
 } from 'antd';
+
+import {
+  AlipayCircleOutlined,
+  TaobaoCircleOutlined,
+  WeiboCircleOutlined,
+  KeyOutlined,
+} from '@ant-design/icons';
 
 import logo from '../../components/logo_cargoops.png';
 import topLeftPng from '../../components/Group14_login.png';
 import bottomLeftPng from '../../components/Group18_login.png';
 import topRightPng from '../../components/Group10_login.png';
-
-
-import {
-  UserOutlined,
-  LockOutlined,
-  AlipayCircleOutlined,
-  TaobaoCircleOutlined,
-  WeiboCircleOutlined
-} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const { Title, Link, Text } = Typography;
 
-export default function LoginPage({ onLogin }: { onLogin: () => void }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(true);
+export default function LoginPage({
+  onLogin,
+}: {
+  onLogin: (info: { role: string; employeeId: string }) => void;
+}) {
+  const [apiKey, setApiKey] = useState('');
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    onLogin(); // 임시로 통과
-    navigate('/roles');
+  const handleLogin = async () => {
+    if (!apiKey.trim()) {
+      message.warning('🔑 API Key를 입력해주세요');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/api-key?api_key=${apiKey}`
+      );
+      const data = await res.json();
+      console.log('🔑 API 응답 데이터:', data);
+
+      if (res.ok && data?.role && data?.employee_id) {
+        message.success(`✅ 로그인 성공 (${data.role})`);
+        onLogin({ role: data.role, employeeId: data.employee_id });
+        navigate('/'); // 홈 또는 권한 페이지로 이동
+      } else {
+        message.error('❌ 유효하지 않은 API Key입니다');
+      }
+    } catch (err) {
+      message.error('❌ 네트워크 오류');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', overflow: 'visible' }}>
-      {/* 배경 SVG들 */}
+      {/* 배경 이미지 */}
       <img
         src={topLeftPng}
         alt="top-left-decoration"
@@ -51,8 +74,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
           left: 0,
           width: 200,
           zIndex: 0,
-          height: 200, 
-          backgroundColor: 'rgba(255,0,0,0.3)'
+          height: 200,
         }}
       />
       <img
@@ -78,7 +100,7 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
         }}
       />
 
-      {/* 로그인 콘텐츠 */}
+      {/* 로그인 박스 */}
       <div
         style={{
           position: 'relative',
@@ -88,66 +110,38 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
           alignItems: 'center',
           flexDirection: 'column',
           minHeight: '100vh',
-          background: 'var(--Conditional-page-background, #F0F2F5)'
+          background: '#F0F2F5',
         }}
       >
-        {/* 로고 */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img
-            src={logo}
-            alt="logo"
-            style={{ width: 40, marginBottom: 12 }}
-          />
+          <img src={logo} alt="logo" style={{ width: 40, marginBottom: 12 }} />
           <Title level={3} style={{ margin: 0 }}>
             CargoOps
           </Title>
           <Text type="secondary">End-to-End Warehouse Management System</Text>
         </div>
 
-        {/* 로그인 카드 */}
         <Card style={{ width: 300 }}>
           <Title level={5} style={{ marginBottom: 24 }}>
-            Login
+            Login with API Key
           </Title>
 
           <Input
             size="large"
-            placeholder="Scan ID or Type Username"
-            prefix={<UserOutlined />}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your API Key"
+            prefix={<KeyOutlined />}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            onPressEnter={handleLogin}
             style={{ marginBottom: 16 }}
           />
-          <Input.Password
-            size="large"
-            placeholder="password: ant.design"
-            prefix={<LockOutlined />}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ marginBottom: 16 }}
-          />
-
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: 16
-            }}
-          >
-            <Checkbox
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-            >
-              Remember me
-            </Checkbox>
-            <Link>Forgot your</Link>
-          </div>
 
           <Button
             type="primary"
             block
             size="large"
             onClick={handleLogin}
+            loading={loading}
             style={{ marginBottom: 16 }}
           >
             Sign In
@@ -168,11 +162,8 @@ export default function LoginPage({ onLogin }: { onLogin: () => void }) {
           </div>
         </Card>
 
-        {/* 하단 푸터 */}
         <div style={{ marginTop: 32, textAlign: 'center', color: '#999' }}>
-          <div style={{ marginBottom: 4 }}>
-            Ant Design Pro &nbsp; | &nbsp; Ant Design
-          </div>
+          <div style={{ marginBottom: 4 }}>Ant Design Pro &nbsp; | &nbsp; Ant Design</div>
           <div style={{ fontSize: 12 }}>
             Copyright ©2020 Produced by Ant Finance Experience Technology Department
           </div>

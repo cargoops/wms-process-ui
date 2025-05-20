@@ -42,6 +42,9 @@ export default function App() {
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // ✅ [추가] 역할 및 사용자 정보 저장
+  const [userInfo, setUserInfo] = useState<{ role: string; employeeId: string } | null>(null);
+
   const menuGroups: Record<string, string> = {
     soList: 'Storing Order',
     soReceiving: 'Receiving',
@@ -74,23 +77,36 @@ export default function App() {
     'picking/pickslip': 'Pick Slip List',
   };
 
+  {console.log('🔐 App에서 전달하는 userRole:', userInfo?.role)}
+
   return (
     <Router>
       <Routes>
+        {/* ✅ 수정: 로그인 성공 시 역할/ID 저장 */}
         <Route
           path="/login"
-          element={<LoginPage onLogin={() => setIsAuthenticated(true)} />}
+          element={
+            <LoginPage
+              onLogin={({ role, employeeId }) => {
+                setIsAuthenticated(true);
+                setUserInfo({ role, employeeId });
+              }}
+            />
+          }
         />
-
+      
         <Route
           path="/*"
           element={
             <PrivateRoute isAuthenticated={isAuthenticated}>
+              
               <AppLayout
                 collapsed={collapsed}
                 setCollapsed={setCollapsed}
                 selectedMenu={selectedMenu}
                 setSelectedMenu={setSelectedMenu}
+                userRole={userInfo?.role}
+                employeeId={userInfo?.employeeId}
               />
             </PrivateRoute>
           }

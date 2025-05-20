@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Layout, Menu, Breadcrumb, Typography, Avatar } from 'antd';
+import { Layout, Menu, Breadcrumb, Typography, Avatar, message } from 'antd';
 import {
   UserOutlined,
   BellOutlined,
@@ -40,11 +40,14 @@ const menuTitleMap: Record<string, string> = {
   'dispatch/inspection': 'Dispatch Inspection',
 };
 
+// ✅ 1. userRole, employeeId prop 타입 정의 추가
 interface AppLayoutProps {
   collapsed: boolean;
   setCollapsed: (val: boolean) => void;
   selectedMenu: string;
   setSelectedMenu: (val: string) => void;
+  userRole?: string;
+  employeeId?: string;
 }
 
 const AppLayout: React.FC<AppLayoutProps> = ({
@@ -52,7 +55,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   setCollapsed,
   selectedMenu,
   setSelectedMenu,
+  userRole,       // ✅ 2. 구조 분해
+  employeeId,
 }) => {
+
+  console.log('📥 AppLayout에서 받은 userRole:', userRole);
+  
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -69,6 +77,43 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   }, [location.pathname]);
 
   const resolvedPageTitle = menuTitleMap[selectedMenu] || menuTitleMap[key] || 'Page Title';
+
+  // ✅ 3. role별 허용 메뉴 설정 (원한다면 클릭 차단에도 활용 가능)
+  const allowedMenusByRole: Record<string, string[]> = {
+    admin: [
+      'dashboard',
+      'master',
+      'storingorder',
+      'storingorder/list',
+      'receiving',
+      'receiving/soreceiving',
+      'receiving/list',
+      'tq',
+      'tq/package',
+      'tq/list',
+      'binning',
+      'binning/assign',
+      'binning/my',
+      'inventory',
+      'inventory/management',
+      'inventory/reconciliation',
+      'picking',
+      'picking/mypicking',
+      'picking/pickslip',
+      'dispatch',
+      'dispatch/mypacking',
+      'dispatch/inspection',
+    ],
+    receiver: [
+      'dashboard',
+      'receiving',
+      'receiving/soreceiving',
+    ],
+  };
+
+  const allowedMenus = allowedMenusByRole[userRole ?? ''] ?? [];
+
+  const isAllowed = (menuKey: string) => allowedMenus.includes(menuKey);
 
   return (
     <Layout style={{ minHeight: '100vh', paddingTop: 56 }}>
@@ -107,7 +152,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           <QuestionCircleOutlined style={{ color: 'white' }} />
           <BellOutlined style={{ color: 'white' }} />
           <Avatar style={{ backgroundColor: '#1890ff' }} icon={<UserOutlined />} />
-          <Text style={{ color: 'white' }}>Mel Kwon</Text>
+          <Text style={{ color: 'white' }}>{employeeId ?? 'User'}</Text>
           <GlobalOutlined style={{ color: 'white' }} />
         </div>
       </Header>
@@ -131,38 +176,50 @@ const AppLayout: React.FC<AppLayoutProps> = ({
             mode="inline"
             selectedKeys={[selectedMenu]}
             onClick={(e) => {
+              if (!isAllowed(e.key)) {
+                message.warning('❌ 해당 메뉴에 접근할 수 없습니다.');
+                return;
+              }
               setSelectedMenu(e.key);
               navigate(`/${e.key}`);
             }}
           >
-            <Menu.Item key="dashboard" icon={<DashboardOutlined />}>Dashboard</Menu.Item>
-            <Menu.Item key="master" icon={<HighlightOutlined />}>Master</Menu.Item>
+            {/* 예시: 메뉴 하나씩 접근 제어 */}
+            <Menu.Item key="dashboard" icon={<DashboardOutlined />} disabled={!isAllowed('dashboard')}>Dashboard</Menu.Item>
+            <Menu.Item key="master" icon={<HighlightOutlined />} disabled={!isAllowed('master')}>Master</Menu.Item>
+
             <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order">
-              <Menu.Item key="storingorder/list">Storing Order List</Menu.Item>
+              <Menu.Item key="storingorder/list" disabled={!isAllowed('storingorder/list')}>Storing Order List</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.SubMenu key="receiving" icon={<CheckCircleOutlined />} title="Receiving">
-              <Menu.Item key="receiving/soreceiving">SO Receiving</Menu.Item>
-              <Menu.Item key="receiving/list">Receiving List</Menu.Item>
+              <Menu.Item key="receiving/soreceiving" disabled={!isAllowed('receiving/soreceiving')}>SO Receiving</Menu.Item>
+              <Menu.Item key="receiving/list" disabled={!isAllowed('receiving/list')}>Receiving List</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.SubMenu key="tq" icon={<TableOutlined />} title="Technical Query">
-              <Menu.Item key="tq/package">Package TQ</Menu.Item>
-              <Menu.Item key="tq/list">TQ List</Menu.Item>
+              <Menu.Item key="tq/package" disabled={!isAllowed('tq/package')}>Package TQ</Menu.Item>
+              <Menu.Item key="tq/list" disabled={!isAllowed('tq/list')}>TQ List</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning">
-              <Menu.Item key="binning/assign">Bin Assignment</Menu.Item>
-              <Menu.Item key="binning/my">My Binning</Menu.Item>
+              <Menu.Item key="binning/assign" disabled={!isAllowed('binning/assign')}>Bin Assignment</Menu.Item>
+              <Menu.Item key="binning/my" disabled={!isAllowed('binning/my')}>My Binning</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.SubMenu key="inventory" icon={<CheckCircleOutlined />} title="Inventory">
-              <Menu.Item key="inventory/management">Inventory Management</Menu.Item>
-              <Menu.Item key="inventory/reconciliation">Inventory Reconciliation</Menu.Item>
+              <Menu.Item key="inventory/management" disabled={!isAllowed('inventory/management')}>Inventory Management</Menu.Item>
+              <Menu.Item key="inventory/reconciliation" disabled={!isAllowed('inventory/reconciliation')}>Inventory Reconciliation</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking">
-              <Menu.Item key="picking/mypicking">My Picking</Menu.Item>
-              <Menu.Item key="picking/pickslip">Pick Slip</Menu.Item>
+              <Menu.Item key="picking/mypicking" disabled={!isAllowed('picking/mypicking')}>My Picking</Menu.Item>
+              <Menu.Item key="picking/pickslip" disabled={!isAllowed('picking/pickslip')}>Pick Slip</Menu.Item>
             </Menu.SubMenu>
+
             <Menu.SubMenu key="dispatch" icon={<SendOutlined />} title="Dispatch">
-              <Menu.Item key="dispatch/mypacking">My Packing</Menu.Item>
-              <Menu.Item key="dispatch/inspection">Dispatch Inspection</Menu.Item>
+              <Menu.Item key="dispatch/mypacking" disabled={!isAllowed('dispatch/mypacking')}>My Packing</Menu.Item>
+              <Menu.Item key="dispatch/inspection" disabled={!isAllowed('dispatch/inspection')}>Dispatch Inspection</Menu.Item>
             </Menu.SubMenu>
           </Menu>
         </Sider>
