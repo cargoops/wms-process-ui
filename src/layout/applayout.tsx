@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Layout, Menu, Breadcrumb, Typography, Avatar, message } from 'antd';
+import { Layout, Menu, Breadcrumb, Typography, Avatar, Modal } from 'antd'; // ✅ Modal 추가
 import {
   UserOutlined,
   BellOutlined,
@@ -40,7 +40,6 @@ const menuTitleMap: Record<string, string> = {
   'dispatch/inspection': 'Dispatch Inspection',
 };
 
-// ✅ 1. userRole, employeeId prop 타입 정의 추가
 interface AppLayoutProps {
   collapsed: boolean;
   setCollapsed: (val: boolean) => void;
@@ -55,12 +54,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   setCollapsed,
   selectedMenu,
   setSelectedMenu,
-  userRole,       // ✅ 2. 구조 분해
+  userRole,
   employeeId,
 }) => {
-
   console.log('📥 AppLayout에서 받은 userRole:', userRole);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -78,7 +76,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
   const resolvedPageTitle = menuTitleMap[selectedMenu] || menuTitleMap[key] || 'Page Title';
 
-  // ✅ 3. role별 허용 메뉴 설정 (원한다면 클릭 차단에도 활용 가능)
   const allowedMenusByRole: Record<string, string[]> = {
     admin: [
       'dashboard',
@@ -105,7 +102,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'dispatch/inspection',
     ],
     receiver: [
-      'dashboard',
       'receiving',
       'receiving/soreceiving',
     ],
@@ -114,6 +110,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   const allowedMenus = allowedMenusByRole[userRole ?? ''] ?? [];
 
   const isAllowed = (menuKey: string) => allowedMenus.includes(menuKey);
+
+  // 메뉴 key에 따라 스타일 반환
+  const getItemStyle = (key: string): React.CSSProperties => {
+    return isAllowed(key)
+      ? {}
+      : {
+          opacity: 0.4,
+          pointerEvents: 'auto',
+          cursor: 'not-allowed',
+        };
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', paddingTop: 56 }}>
@@ -158,7 +165,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       </Header>
 
       <Layout>
-        {/* 사이드바 */}
         <Sider
           width={220}
           collapsible
@@ -177,54 +183,88 @@ const AppLayout: React.FC<AppLayoutProps> = ({
             selectedKeys={[selectedMenu]}
             onClick={(e) => {
               if (!isAllowed(e.key)) {
-                message.warning('❌ 해당 메뉴에 접근할 수 없습니다.');
+                Modal.warning({
+                  title: 'Access Denied',
+                  content: 'You are not allowed to this tab.',
+                  centered: true,
+                });
                 return;
               }
               setSelectedMenu(e.key);
               navigate(`/${e.key}`);
             }}
           >
-            {/* 예시: 메뉴 하나씩 접근 제어 */}
-            <Menu.Item key="dashboard" icon={<DashboardOutlined />} disabled={!isAllowed('dashboard')}>Dashboard</Menu.Item>
-            <Menu.Item key="master" icon={<HighlightOutlined />} disabled={!isAllowed('master')}>Master</Menu.Item>
+            <Menu.Item key="dashboard" icon={<DashboardOutlined />} style={getItemStyle('dashboard')}>
+              Dashboard
+            </Menu.Item>
 
-            <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order">
-              <Menu.Item key="storingorder/list" disabled={!isAllowed('storingorder/list')}>Storing Order List</Menu.Item>
+            <Menu.Item key="master" icon={<HighlightOutlined />} style={getItemStyle('master')}>
+              Master
+            </Menu.Item>
+
+            <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order" style={getItemStyle('storingorder')}>
+              <Menu.Item key="storingorder/list" style={getItemStyle('storingorder/list')}>
+                Storing Order List
+              </Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.SubMenu key="receiving" icon={<CheckCircleOutlined />} title="Receiving">
-              <Menu.Item key="receiving/soreceiving" disabled={!isAllowed('receiving/soreceiving')}>SO Receiving</Menu.Item>
-              <Menu.Item key="receiving/list" disabled={!isAllowed('receiving/list')}>Receiving List</Menu.Item>
+            <Menu.SubMenu key="receiving" icon={<CheckCircleOutlined />} title="Receiving" style={getItemStyle('receiving')}>
+              <Menu.Item key="receiving/soreceiving" style={getItemStyle('receiving/soreceiving')}>
+                SO Receiving
+              </Menu.Item>
+              <Menu.Item key="receiving/list" style={getItemStyle('receiving/list')}>
+                Receiving List
+              </Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.SubMenu key="tq" icon={<TableOutlined />} title="Technical Query">
-              <Menu.Item key="tq/package" disabled={!isAllowed('tq/package')}>Package TQ</Menu.Item>
-              <Menu.Item key="tq/list" disabled={!isAllowed('tq/list')}>TQ List</Menu.Item>
+            <Menu.SubMenu key="tq" icon={<TableOutlined />} title="Technical Query" style={getItemStyle('tq')}>
+              <Menu.Item key="tq/package" style={getItemStyle('tq/package')}>
+                Package TQ
+              </Menu.Item>
+              <Menu.Item key="tq/list" style={getItemStyle('tq/list')}>
+                TQ List
+              </Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning">
-              <Menu.Item key="binning/assign" disabled={!isAllowed('binning/assign')}>Bin Assignment</Menu.Item>
-              <Menu.Item key="binning/my" disabled={!isAllowed('binning/my')}>My Binning</Menu.Item>
+            <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning" style={getItemStyle('binning')}>
+              <Menu.Item key="binning/assign" style={getItemStyle('binning/assign')}>
+                Bin Assignment
+              </Menu.Item>
+              <Menu.Item key="binning/my" style={getItemStyle('binning/my')}>
+                My Binning
+              </Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.SubMenu key="inventory" icon={<CheckCircleOutlined />} title="Inventory">
-              <Menu.Item key="inventory/management" disabled={!isAllowed('inventory/management')}>Inventory Management</Menu.Item>
-              <Menu.Item key="inventory/reconciliation" disabled={!isAllowed('inventory/reconciliation')}>Inventory Reconciliation</Menu.Item>
+            <Menu.SubMenu key="inventory" icon={<CheckCircleOutlined />} title="Inventory" style={getItemStyle('inventory')}>
+              <Menu.Item key="inventory/management" style={getItemStyle('inventory/management')}>
+                Inventory Management
+              </Menu.Item>
+              <Menu.Item key="inventory/reconciliation" style={getItemStyle('inventory/reconciliation')}>
+                Inventory Reconciliation
+              </Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking">
-              <Menu.Item key="picking/mypicking" disabled={!isAllowed('picking/mypicking')}>My Picking</Menu.Item>
-              <Menu.Item key="picking/pickslip" disabled={!isAllowed('picking/pickslip')}>Pick Slip</Menu.Item>
+            <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking" style={getItemStyle('picking')}>
+              <Menu.Item key="picking/mypicking" style={getItemStyle('picking/mypicking')}>
+                My Picking
+              </Menu.Item>
+              <Menu.Item key="picking/pickslip" style={getItemStyle('picking/pickslip')}>
+                Pick Slip
+              </Menu.Item>
             </Menu.SubMenu>
 
-            <Menu.SubMenu key="dispatch" icon={<SendOutlined />} title="Dispatch">
-              <Menu.Item key="dispatch/mypacking" disabled={!isAllowed('dispatch/mypacking')}>My Packing</Menu.Item>
-              <Menu.Item key="dispatch/inspection" disabled={!isAllowed('dispatch/inspection')}>Dispatch Inspection</Menu.Item>
+            <Menu.SubMenu key="dispatch" icon={<SendOutlined />} title="Dispatch" style={getItemStyle('dispatch')}>
+              <Menu.Item key="dispatch/mypacking" style={getItemStyle('dispatch/mypacking')}>
+                My Packing
+              </Menu.Item>
+              <Menu.Item key="dispatch/inspection" style={getItemStyle('dispatch/inspection')}>
+                Dispatch Inspection
+              </Menu.Item>
             </Menu.SubMenu>
           </Menu>
+
         </Sider>
 
-        {/* 콘텐츠 영역 */}
         <Layout>
           <div style={{ background: '#fff', padding: '16px 24px' }}>
             <Breadcrumb>
