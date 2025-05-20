@@ -49,15 +49,12 @@ export default function ReceivingProcess() {
       const list = Array.isArray(res.data.data) ? res.data.data : [];
       const match = list.find((o: any) => o.storing_order_id === id);
       if (match) {
-        setOrders((prevOrders) => {
-          const alreadyExists = prevOrders.some((o) => o.storing_order_id === match.storing_order_id);
-          return alreadyExists ? prevOrders : [...prevOrders, match];
-        });
-        setEditingDiscrepancies((prev) => ({
-          ...prev,
-          [match.storing_order_id]: match.discrepancy_detail ?? '',
-        }));
-      }
+  setOrders((prevOrders) => [...prevOrders, match]); // 중복 허용, 무조건 쌓기
+  setEditingDiscrepancies((prev) => ({
+    ...prev,
+    [match.storing_order_id]: match.discrepancy_detail ?? '',
+  }));
+}
     } catch (err) {
       message.error('❌ SO 데이터 조회 실패');
       console.error(err);
