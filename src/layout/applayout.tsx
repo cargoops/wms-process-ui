@@ -105,6 +105,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'receiving',
       'receiving/soreceiving',
     ],
+
+    tq_employee: [
+      'tq',
+      'tq/package',
+    ],
   };
 
   const allowedMenus = allowedMenusByRole[userRole ?? ''] ?? [];

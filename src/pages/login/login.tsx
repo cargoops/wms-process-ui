@@ -49,6 +49,11 @@ export default function LoginPage({
 
       if (res.ok && data?.role && data?.employee_id) {
         message.success(`✅ 로그인 성공 (${data.role})`);
+        
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('employee_id', data.employee_id);
+        localStorage.setItem('api_key', data.api_key); 
+
         onLogin({ role: data.role, employeeId: data.employee_id });
         navigate('/'); // 홈 또는 권한 페이지로 이동
       } else {
