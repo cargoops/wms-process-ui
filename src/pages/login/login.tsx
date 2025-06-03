@@ -45,7 +45,7 @@ export default function LoginPage({
         `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/api-key?api_key=${apiKey}`
       );
       const data = await res.json();
-      console.log('🔑 API 응답 데이터:', data);
+      console.log('🔑 API response data:', data);
 
       if (res.ok && data?.role && data?.employee_id) {
         message.success(`✅ 로그인 성공 (${data.role})`);
@@ -55,7 +55,16 @@ export default function LoginPage({
         localStorage.setItem('api_key', data.api_key); 
 
         onLogin({ role: data.role, employeeId: data.employee_id });
-        navigate('/'); // 홈 또는 권한 페이지로 이동
+
+        // ✅ 역할 기반 기본 페이지로 이동
+        const defaultRouteByRole: Record<string, string> = {
+          admin: '/dashboard',
+          receiver: '/receiving/soreceiving',
+          tq_employee: '/tq/package',
+          binner: '/binning/assign',
+        };
+        const target = defaultRouteByRole[data.role] ?? '/dashboard';
+        navigate(target);
       } else {
         message.error('❌ 유효하지 않은 API Key입니다');
       }
