@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Layout, Menu, Breadcrumb, Typography, Avatar, Modal } from 'antd'; // ✅ Modal 추가
+import { Layout, Menu, Breadcrumb, Typography, Avatar, Modal } from 'antd';
 import {
   UserOutlined,
   BellOutlined,
@@ -15,7 +15,7 @@ import {
   DashboardOutlined,
   FormOutlined,
   CheckCircleOutlined,
-  HighlightOutlined
+  HighlightOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
@@ -29,9 +29,7 @@ const menuTitleMap: Record<string, string> = {
   'receiving/soreceiving': 'SO Receiving',
   'receiving/list': 'Receiving List',
   'tq/package': 'Package Technical Query',
-  'tq/list': 'TQ List',
   'binning/assign': 'Bin Assignment',
-  'binning/my': 'My Binning',
   'inventory/management': 'Inventory Management',
   'inventory/reconciliation': 'Inventory Reconciliation',
   'picking/mypicking': 'My Picking',
@@ -57,8 +55,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   userRole,
   employeeId,
 }) => {
-  console.log('📥 AppLayout에서 받은 userRole:', userRole);
-
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -87,10 +83,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'receiving/list',
       'tq',
       'tq/package',
-      'tq/list',
       'binning',
       'binning/assign',
-      'binning/my',
       'inventory',
       'inventory/management',
       'inventory/reconciliation',
@@ -101,35 +95,27 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'dispatch/mypacking',
       'dispatch/inspection',
     ],
-    receiver: [
-      'receiving',
-      'receiving/soreceiving',
-    ],
-
-    tq_employee: [
-      'tq',
-      'tq/package',
-    ],
+    receiver: ['receiving', 'receiving/soreceiving'],
+    tq_employee: ['tq', 'tq/package'],
+    binner: ['binning', 'binning/assign'],
   };
 
   const allowedMenus = allowedMenusByRole[userRole ?? ''] ?? [];
 
   const isAllowed = (menuKey: string) => allowedMenus.includes(menuKey);
 
-  // 메뉴 key에 따라 스타일 반환
-  const getItemStyle = (key: string): React.CSSProperties => {
-    return isAllowed(key)
+  const getItemStyle = (key: string): React.CSSProperties =>
+    isAllowed(key)
       ? {}
       : {
           opacity: 0.4,
           pointerEvents: 'auto',
           cursor: 'not-allowed',
         };
-  };
 
   return (
     <Layout style={{ minHeight: '100vh', paddingTop: 56 }}>
-      {/* 헤더 */}
+      {/* Header */}
       <Header
         style={{
           display: 'flex',
@@ -226,17 +212,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({
               <Menu.Item key="tq/package" style={getItemStyle('tq/package')}>
                 Package TQ
               </Menu.Item>
-              <Menu.Item key="tq/list" style={getItemStyle('tq/list')}>
-                TQ List
-              </Menu.Item>
             </Menu.SubMenu>
 
             <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning" style={getItemStyle('binning')}>
               <Menu.Item key="binning/assign" style={getItemStyle('binning/assign')}>
                 Bin Assignment
-              </Menu.Item>
-              <Menu.Item key="binning/my" style={getItemStyle('binning/my')}>
-                My Binning
               </Menu.Item>
             </Menu.SubMenu>
 
@@ -267,7 +247,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
               </Menu.Item>
             </Menu.SubMenu>
           </Menu>
-
         </Sider>
 
         <Layout>
@@ -275,14 +254,10 @@ const AppLayout: React.FC<AppLayoutProps> = ({
             <Breadcrumb>
               <Breadcrumb.Item>Home</Breadcrumb.Item>
               {segments.length >= 1 && segments[0] && (
-                <Breadcrumb.Item>
-                  {menuTitleMap[segments[0]] || segments[0]}
-                </Breadcrumb.Item>
+                <Breadcrumb.Item>{menuTitleMap[segments[0]] || segments[0]}</Breadcrumb.Item>
               )}
               {segments.length === 2 && segments[1] && (
-                <Breadcrumb.Item>
-                  {menuTitleMap[`${segments[0]}/${segments[1]}`] || segments[1]}
-                </Breadcrumb.Item>
+                <Breadcrumb.Item>{menuTitleMap[`${segments[0]}/${segments[1]}`] || segments[1]}</Breadcrumb.Item>
               )}
             </Breadcrumb>
           </div>
