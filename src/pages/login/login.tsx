@@ -42,7 +42,7 @@ export default function LoginPage({
     setLoading(true);
     try {
       const res = await fetch(
-        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/api-key?api_key=${apiKey}`
+        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/api-key?api_key=${apiKey}`
       );
       const data = await res.json();
       console.log('🔑 API response data:', data);

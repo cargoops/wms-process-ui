@@ -1,20 +1,20 @@
 // src/pages/tq/package.tsx
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Input, Button, Table, Select, message } from 'antd';
+import { Card, Row, Col, Input, Button, Table, Select, message, Modal, Spin, Tag } from 'antd'; // Tag 추가
 import type { ColumnsType } from 'antd/es/table';
 
 const { Option } = Select;
 
 interface TQRecord {
-  packageId: string;
-  productName: string;
-  orderQuantity: number;
-  scannedQuantity: number;
-  inspectionResult: 'Pass' | 'Fail';
-  discrepancyDetail?: string;
-  employeeId: string;
+  package_id: string;
+  product_id: string;
+  quantity: string;
+  status: string;
+  tq_scanned_quantity?: string;
+  tq_employee_id?: string;
+  tq_date?: string;
 }
 
 interface PackageInfo {
@@ -23,129 +23,92 @@ interface PackageInfo {
   orderQuantity: number;
 }
 
-const dummyData: TQRecord[] = [
-  {
-    packageId: 'pkg-00123',
-    productName: 'Apple iPhone 13 Pro',
-    orderQuantity: 12,
-    scannedQuantity: 12,
-    inspectionResult: 'Fail',
-    employeeId: 'emp001',
-  },
-  {
-    packageId: 'pkg-00124',
-    productName: 'Apple iPhone 13 Pro',
-    orderQuantity: 12,
-    scannedQuantity: 11,
-    inspectionResult: 'Fail',
-    employeeId: 'emp002',
-  },
-  {
-    packageId: 'pkg-00125',
-    productName: 'Apple iPhone 13 Pro',
-    orderQuantity: 12,
-    scannedQuantity: 12,
-    inspectionResult: 'Fail',
-    employeeId: 'emp003',
-  },
-];
-
 const productNameMap: Record<string, string> = {
   PROD4100: 'Apple iPhone 16 Pro',
-  // 필요한 제품은 여기에 계속 추가
+  PROD1: 'Apple iPhone 13 Pro',
+  PROD2: 'Samsung Galaxy S22',
+  PROD3: 'Google Pixel 7',
+  // 필요시 계속 추가
 };
 
 const PackageTQPage: React.FC = () => {
   const [packageId, setPackageId] = useState('');
   const [qualityCheck, setQualityCheck] = useState('');
-  const [data, setData] = useState<TQRecord[]>(dummyData);
+  const [data, setData] = useState<TQRecord[]>([]);
   const [packageInfo, setPackageInfo] = useState<PackageInfo[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSearch = async () => {
-    if (!packageId) {
-      message.warning('Please enter a Package ID');
-      return;
-    }
+  useEffect(() => {
+    const fetchAllPackages = async () => {
+      try {
+        const response = await axios.get(
+          'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/packages',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'adm-12345678',
+            },
+          }
+        );
+        setData(response.data.data);
+      } catch (err) {
+        message.error('패키지 리스트 조회에 실패했습니다.');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    try {
-      const response = await axios.get(
-        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/package/${packageId}`,
-        {
-          headers: {
-            Authorization: 'adm-12345678',
-          },
-        }
-      );
-
-      const res = response.data;
-      const productName = productNameMap[res.product_id] || 'Unknown';
-
-      setPackageInfo([
-        {
-          productId: res.product_id,
-          productName,
-          orderQuantity: res.quantity,
-        },
-      ]);
-    } catch (err) {
-      console.error(err);
-      message.error('Failed to fetch package info');
-      setPackageInfo([]);
-    }
-  };
-
-  const handleQualitySubmit = () => {
-    console.log('Submitting quality check:', qualityCheck);
-  };
+    fetchAllPackages();
+  }, []);
 
   const tqColumns: ColumnsType<TQRecord> = [
     {
       title: 'Package ID',
-      dataIndex: 'packageId',
-      key: 'packageId',
+      dataIndex: 'package_id',
+      key: 'package_id',
     },
     {
-      title: 'Product Name',
-      dataIndex: 'productName',
-      key: 'productName',
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => {
+        const colorMap: Record<string, string> = {
+          OPEN: 'blue',
+          'READY-FOR-TQ': 'green',
+          'TQ-CHECKING': 'gold',
+          'READY-FOR-BIN-ALLOCATION': 'purple',
+          'INSPECTION-FAILED': 'red',
+          'TQ-QUALITY-CHECK-FAILED': 'red',
+        };
+        return <Tag color={colorMap[status] || 'default'}>{status}</Tag>;
+      },
     },
     {
-      title: 'Order Quantity',
-      dataIndex: 'orderQuantity',
-      key: 'orderQuantity',
+      title: 'Product ID',
+      dataIndex: 'product_id',
+      key: 'product_id',
     },
     {
-      title: 'Scanned Quantity',
-      dataIndex: 'scannedQuantity',
-      key: 'scannedQuantity',
+      title: 'Quantity',
+      dataIndex: 'quantity',
+      key: 'quantity',
     },
     {
-      title: 'Inspection Result',
-      dataIndex: 'inspectionResult',
-      key: 'inspectionResult',
+      title: 'Scanned Qty',
+      dataIndex: 'tq_scanned_quantity',
+      key: 'tq_scanned_quantity',
     },
     {
-      title: 'Discrepancy Detail',
-      key: 'discrepancyDetail',
-      render: (_, record) => (
-        <Input
-          placeholder="Describe"
-          defaultValue={record.discrepancyDetail}
-          onChange={(e) => {
-            const updated = data.map((item) =>
-              item.packageId === record.packageId
-                ? { ...item, discrepancyDetail: e.target.value }
-                : item
-            );
-            setData(updated);
-          }}
-        />
-      ),
+      title: 'TQ Employee',
+      dataIndex: 'tq_employee_id',
+      key: 'tq_employee_id',
     },
     {
-      title: 'Employee',
-      dataIndex: 'employeeId',
-      key: 'employeeId',
+      title: 'TQ Date',
+      dataIndex: 'tq_date',
+      key: 'tq_date',
     },
   ];
 
@@ -166,6 +129,45 @@ const PackageTQPage: React.FC = () => {
       key: 'orderQuantity',
     },
   ];
+
+  const handleSearch = async () => {
+    if (!packageId) {
+      message.warning('Please enter a Package ID');
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/package/${packageId}`,
+        {
+          headers: {
+            Authorization: 'adm-12345678',
+          },
+        }
+      );
+
+      const res = response.data;
+      setPackageId(res.package_id);
+
+      const productName = productNameMap[res.product_id] || 'Unknown';
+
+      setPackageInfo([
+        {
+          productId: res.product_id,
+          productName,
+          orderQuantity: res.quantity,
+        },
+      ]);
+    } catch (err) {
+      console.error(err);
+      message.error('Failed to fetch package info');
+      setPackageInfo([]);
+    }
+  };
+
+  const handleQualitySubmit = () => {
+    console.log('Submitting quality check:', qualityCheck);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -198,106 +200,113 @@ const PackageTQPage: React.FC = () => {
         </Col>
 
         <Col span={12}>
-  <Card title="2. TQ Inspection">
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Quality Check Section */}
-        <div>
-          <p style={{ fontWeight: 500, marginBottom: 4 }}>👍 Quality Check</p>
-          <p style={{ marginBottom: 16 }}>
-            Submit ticket if there is product ID discrepancy or physical damage.
-          </p>
+          <Card title="2. TQ Inspection">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div>
+                <p style={{ fontWeight: 500, marginBottom: 4 }}>👍 Quality Check</p>
+                <p style={{ marginBottom: 16 }}>
+                  Submit ticket if there is product ID discrepancy or physical damage.
+                </p>
 
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Button
-              type="primary"
-              onClick={async () => {
-                if (!packageId) return message.warning('Package ID is required');
-                try {
-                  await axios.post(
-                    'https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/tq-quality-check',
-                    {
-                      package_id: packageId,
-                      employee_id: 'emp007', // 실제 직원 ID
-                    },
-                    {
-                      headers: {
-                        Authorization: 'tq-4c9d8e2f',
-                      },
-                    }
-                  );
-                  message.success('Package marked as Pass (READY-FOR-RFID-ATTACH)');
-                } catch (err: any) {
-                  if (err.response?.status === 403) {
-                    message.error('Forbidden: 권한이 없습니다');
-                  } else if (err.response?.status === 400) {
-                    message.error('패키지 상태가 READY-FOR-TQ가 아닙니다');
-                  } else if (err.response?.status === 404) {
-                    message.error('패키지를 찾을 수 없습니다');
-                  } else {
-                    message.error('Unexpected error occurred');
-                  }
-                }
-              }}
-            >
-              Pass
-            </Button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button
+                    type="primary"
+                    onClick={async () => {
+                      if (!packageId) return message.warning('Package ID is required');
+                      setModalVisible(true);
 
-            <Button danger onClick={() => setQualityCheck('Fail')}>
-              Fail
-            </Button>
-          </div>
+                      try {
+                        await axios.post(
+                          'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/tq-quality-check',
+                          {
+                            package_id: packageId,
+                            employee_id: 'TQ3101',
+                            flag: 'pass',
+                          },
+                          {
+                            headers: {
+                              Authorization: 'tq-4c9d8e2f',
+                            },
+                          }
+                        );
+                      } catch (err: any) {
+                        if (err.response?.status === 403) {
+                          message.error('Forbidden: 권한이 없습니다');
+                        } else if (err.response?.status === 400) {
+                          message.error('패키지 상태가 READY-FOR-TQ가 아닙니다');
+                        } else if (err.response?.status === 404) {
+                          message.error('패키지를 찾을 수 없습니다');
+                        } else {
+                          message.error('Unexpected error occurred');
+                        }
+                      }
+                    }}
+                  >
+                    Pass
+                  </Button>
 
-          {qualityCheck === 'Fail' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              <Input.TextArea
-                placeholder="Please describe the issue"
-                rows={3}
-                onChange={(e) => {
-                  const updated = data.map((item) =>
-                    item.packageId === packageId
-                      ? { ...item, discrepancyDetail: e.target.value }
-                      : item
-                  );
-                  setData(updated);
-                }}
-              />
-              <Button
-                type="primary"
-                onClick={() => {
-                  const failRow = data.find((d) => d.packageId === packageId);
-                  message.info('Discrepancy saved.');
-                  console.log('Discrepancy detail:', failRow?.discrepancyDetail);
-                  setQualityCheck('');
-                }}
-              >
-                Save Detail
-              </Button>
+                  <Button danger onClick={() => setQualityCheck('Fail')}>
+                    Fail
+                  </Button>
+                </div>
+
+                {qualityCheck === 'Fail' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                    <Input.TextArea
+                      placeholder="Please describe the issue"
+                      rows={3}
+                      onChange={(e) => {
+                        console.log('Discrepancy:', e.target.value);
+                      }}
+                    />
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        message.info('Discrepancy saved.');
+                        setQualityCheck('');
+                      }}
+                    >
+                      Save Detail
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <p style={{ fontWeight: 500, marginBottom: 4 }}>🧮 Quantity Check</p>
+                <p style={{ marginBottom: 0 }}>
+                  Attach and scan the RFID to verify the quantity. <br />
+                  The inspection results will be displayed below. <br />
+                  ※ Only for packages that passed quality check!
+                </p>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Quantity Check Section */}
-        <div>
-          <p style={{ fontWeight: 500, marginBottom: 4 }}>🧮 Quantity Check</p>
-          <p style={{ marginBottom: 0 }}>
-            Attach and scan the RFID to verify the quantity. <br />
-            The inspection results will be displayed below. <br />
-            ※ Only for packages that passed quality check!
-          </p>
-        </div>
-      </div>
-    </Card>
-  </Col>
+          </Card>
+        </Col>
       </Row>
 
       <Card title="3. TQ Inspection Result">
-        <Table
-          columns={tqColumns}
-          dataSource={data}
-          pagination={{ pageSize: 5 }}
-          rowKey="packageId"
-        />
+        {loading ? (
+          <Spin tip="Loading packages..." />
+        ) : (
+          <Table
+            columns={tqColumns}
+            dataSource={data}
+            pagination={{ pageSize: 5 }}
+            rowKey="package_id"
+          />
+        )}
       </Card>
+
+      <Modal
+        open={modalVisible}
+        onOk={() => setModalVisible(false)}
+        onCancel={() => setModalVisible(false)}
+        centered
+        title="✅ Quality Check Passed"
+      >
+        <p>Move on to RFID Attach.</p>
+      </Modal>
     </div>
   );
 };

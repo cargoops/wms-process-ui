@@ -39,7 +39,7 @@ export default function ReceivingProcess() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders`,
+        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders`,
         {
           headers: {
             Authorization: 'adm-12345678',
@@ -74,7 +74,7 @@ export default function ReceivingProcess() {
     const value = editingDiscrepancies[soId] || '';
     try {
       await axios.put(
-        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/discrepancy`,
+        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/discrepancy`,
         {
           storing_order_id: soId,
           discrepancy_detail: value,
