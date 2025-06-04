@@ -2,10 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Input, Button, Table, Select, message, Modal, Spin, Tag } from 'antd'; // Tag 추가
+import { Card, Row, Col, Input, Button, Table, message, Modal, Spin, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-
-const { Option } = Select;
 
 interface TQRecord {
   package_id: string;
@@ -28,7 +26,6 @@ const productNameMap: Record<string, string> = {
   PROD1: 'Apple iPhone 13 Pro',
   PROD2: 'Samsung Galaxy S22',
   PROD3: 'Google Pixel 7',
-  // 필요시 계속 추가
 };
 
 const PackageTQPage: React.FC = () => {
@@ -62,6 +59,31 @@ const PackageTQPage: React.FC = () => {
 
     fetchAllPackages();
   }, []);
+
+  const handleSearch = () => {
+    if (!packageId) {
+      message.warning('Please enter a Package ID');
+      return;
+    }
+
+    const found = data.find((pkg) => pkg.package_id === packageId);
+
+    if (!found) {
+      message.error('Package not found');
+      setPackageInfo([]);
+      return;
+    }
+
+    const productName = productNameMap[found.product_id] || 'Unknown';
+
+    setPackageInfo([
+      {
+        productId: found.product_id,
+        productName,
+        orderQuantity: parseInt(found.quantity, 10),
+      },
+    ]);
+  };
 
   const tqColumns: ColumnsType<TQRecord> = [
     {
@@ -130,45 +152,6 @@ const PackageTQPage: React.FC = () => {
     },
   ];
 
-  const handleSearch = async () => {
-    if (!packageId) {
-      message.warning('Please enter a Package ID');
-      return;
-    }
-
-    try {
-      const response = await axios.get(
-        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/package/${packageId}`,
-        {
-          headers: {
-            Authorization: 'adm-12345678',
-          },
-        }
-      );
-
-      const res = response.data;
-      setPackageId(res.package_id);
-
-      const productName = productNameMap[res.product_id] || 'Unknown';
-
-      setPackageInfo([
-        {
-          productId: res.product_id,
-          productName,
-          orderQuantity: res.quantity,
-        },
-      ]);
-    } catch (err) {
-      console.error(err);
-      message.error('Failed to fetch package info');
-      setPackageInfo([]);
-    }
-  };
-
-  const handleQualitySubmit = () => {
-    console.log('Submitting quality check:', qualityCheck);
-  };
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <Row gutter={16}>
@@ -216,7 +199,7 @@ const PackageTQPage: React.FC = () => {
                       setModalVisible(true);
 
                       try {
-                        await axios.post(
+                        const response = await axios.post(
                           'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/tq-quality-check',
                           {
                             package_id: packageId,
@@ -229,6 +212,8 @@ const PackageTQPage: React.FC = () => {
                             },
                           }
                         );
+
+                        console.log('✅ TQ Quality Check Response:', response.data); // 추가된 로그
                       } catch (err: any) {
                         if (err.response?.status === 403) {
                           message.error('Forbidden: 권한이 없습니다');
