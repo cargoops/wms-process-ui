@@ -215,6 +215,8 @@ const PackageTQPage: React.FC = () => {
                         );
 
                         console.log('✅ TQ Quality Check Response:', response.data);
+                        setPackageId('');
+                        setPackageInfo([]);
                       } catch (err: any) {
                         if (err.response?.status === 403) {
                           message.error('Forbidden: 권한이 없습니다');
@@ -250,6 +252,8 @@ const PackageTQPage: React.FC = () => {
                       onClick={() => {
                         message.info('Discrepancy saved.');
                         setQualityCheck('');
+                        setPackageId('');
+                        setPackageInfo([]);
                       }}
                     >
                       Save Detail

@@ -1,3 +1,5 @@
+// src/pages/binassign.tsx
+
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Card, Row, Col, Input, Button, Table, Tag, message, Spin } from 'antd';
@@ -27,7 +29,7 @@ interface RawPackage {
   quantity: string;
   status: string;
   bin_allocation?: Record<string, number> | string | null;
-  bin_current?: Record<string, number> | string | null; // ✅ 추가
+  bin_current?: Record<string, number> | string | null;
   binning_date?: string;
   bin_allocation_date?: string;
 }
@@ -91,7 +93,6 @@ const BinningPage: React.FC = () => {
           return;
         }
 
-
         try {
           current =
             typeof pkg.bin_current === 'string'
@@ -101,14 +102,13 @@ const BinningPage: React.FC = () => {
           console.warn(`Invalid bin_current JSON for package ${pkg.package_id}`);
           current = {};
         }
-      
 
         Object.entries(allocation).forEach(([bin, qty]) => {
           const currentQty = current?.[bin] ?? '';
 
           const binningDateOnly = pkg.bin_allocation_date
-          ? dayjs(pkg.bin_allocation_date).format('YYYY-MM-DD')
-          : '';
+            ? dayjs(pkg.bin_allocation_date).format('YYYY-MM-DD')
+            : '';
 
           rows.push({
             packageId: pkg.package_id,
@@ -237,6 +237,17 @@ const BinningPage: React.FC = () => {
           <Col>
             <Button type="primary" onClick={handleAssign}>
               Assign
+            </Button>
+          </Col>
+          <Col>
+            <Button
+              onClick={() => {
+                setPackageId('');
+                setPackageInfo([]);
+                setBinAllocResult([]);
+              }}
+            >
+              Done
             </Button>
           </Col>
         </Row>
