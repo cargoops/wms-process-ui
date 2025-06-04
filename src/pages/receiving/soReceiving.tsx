@@ -122,11 +122,12 @@ export default function ReceivingProcess() {
       bill_of_entry_id: doc2,
       airway_bill_number: doc3,
       quantity: quantity ?? 1,
+      employee_id: 'RCV2054',
     };
 
     try {
       const res = await fetch(
-        'https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/receive',
+        'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/receive',
         {
           method: 'POST',
           headers: {
