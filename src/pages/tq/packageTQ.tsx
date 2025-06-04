@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Input, Button, Table, message, Modal, Spin, Tag } from 'antd';
+import { Card, Row, Col, Input, Button, Table, message, Modal, Spin, Tag, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
 interface TQRecord {
@@ -36,27 +36,28 @@ const PackageTQPage: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAllPackages = async () => {
-      try {
-        const response = await axios.get(
-          'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/packages',
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'adm-12345678',
-            },
-          }
-        );
-        setData(response.data.data);
-      } catch (err) {
-        message.error('패키지 리스트 조회에 실패했습니다.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchAllPackages = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/packages',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: 'adm-12345678',
+          },
+        }
+      );
+      setData(response.data.data);
+    } catch (err) {
+      message.error('패키지 리스트 조회에 실패했습니다.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchAllPackages();
   }, []);
 
@@ -213,7 +214,7 @@ const PackageTQPage: React.FC = () => {
                           }
                         );
 
-                        console.log('✅ TQ Quality Check Response:', response.data); // 추가된 로그
+                        console.log('✅ TQ Quality Check Response:', response.data);
                       } catch (err: any) {
                         if (err.response?.status === 403) {
                           message.error('Forbidden: 권한이 없습니다');
@@ -270,7 +271,14 @@ const PackageTQPage: React.FC = () => {
         </Col>
       </Row>
 
-      <Card title="3. TQ Inspection Result">
+      <Card
+        title={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>3. TQ Inspection Result</span>
+            <Button onClick={fetchAllPackages}>Refresh</Button>
+          </div>
+        }
+      >
         {loading ? (
           <Spin tip="Loading packages..." />
         ) : (

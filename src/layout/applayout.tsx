@@ -29,7 +29,7 @@ const menuTitleMap: Record<string, string> = {
   'receiving/soreceiving': 'SO Receiving',
   'receiving/list': 'Receiving List',
   'tq/package': 'Package Technical Query',
-  'binning/assign': 'Bin Assignment',
+  'binning/assign': 'Binning',
   'inventory/management': 'Inventory Management',
   'inventory/reconciliation': 'Inventory Reconciliation',
   'picking/mypicking': 'My Picking',
@@ -216,7 +216,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
 
             <Menu.SubMenu key="binning" icon={<DatabaseOutlined />} title="Binning" style={getItemStyle('binning')}>
               <Menu.Item key="binning/assign" style={getItemStyle('binning/assign')}>
-                Bin Assignment
+                Binning
               </Menu.Item>
             </Menu.SubMenu>
 
