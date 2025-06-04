@@ -198,26 +198,96 @@ const PackageTQPage: React.FC = () => {
         </Col>
 
         <Col span={12}>
-          <Card title="2. Quality Check">
-            <Select
-              placeholder="Quality Check"
-              style={{ width: '100%' }}
-              value={qualityCheck}
-              onChange={(val) => setQualityCheck(val)}
-            >
-              <Option value="Pass">Pass</Option>
-              <Option value="Fail">Fail</Option>
-            </Select>
+  <Card title="2. TQ Inspection">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      {/* Quality Check Section */}
+        <div>
+          <p style={{ fontWeight: 500, marginBottom: 4 }}>👍 Quality Check</p>
+          <p style={{ marginBottom: 16 }}>
+            Submit ticket if there is product ID discrepancy or physical damage.
+          </p>
+
+          <div style={{ display: 'flex', gap: 8 }}>
             <Button
               type="primary"
-              style={{ marginTop: 12 }}
-              onClick={handleQualitySubmit}
-              block
+              onClick={async () => {
+                if (!packageId) return message.warning('Package ID is required');
+                try {
+                  await axios.post(
+                    'https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/tq-quality-check',
+                    {
+                      package_id: packageId,
+                      employee_id: 'emp007', // 실제 직원 ID
+                    },
+                    {
+                      headers: {
+                        Authorization: 'tq-4c9d8e2f',
+                      },
+                    }
+                  );
+                  message.success('Package marked as Pass (READY-FOR-RFID-ATTACH)');
+                } catch (err: any) {
+                  if (err.response?.status === 403) {
+                    message.error('Forbidden: 권한이 없습니다');
+                  } else if (err.response?.status === 400) {
+                    message.error('패키지 상태가 READY-FOR-TQ가 아닙니다');
+                  } else if (err.response?.status === 404) {
+                    message.error('패키지를 찾을 수 없습니다');
+                  } else {
+                    message.error('Unexpected error occurred');
+                  }
+                }
+              }}
             >
-              Submit
+              Pass
             </Button>
-          </Card>
-        </Col>
+
+            <Button danger onClick={() => setQualityCheck('Fail')}>
+              Fail
+            </Button>
+          </div>
+
+          {qualityCheck === 'Fail' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+              <Input.TextArea
+                placeholder="Please describe the issue"
+                rows={3}
+                onChange={(e) => {
+                  const updated = data.map((item) =>
+                    item.packageId === packageId
+                      ? { ...item, discrepancyDetail: e.target.value }
+                      : item
+                  );
+                  setData(updated);
+                }}
+              />
+              <Button
+                type="primary"
+                onClick={() => {
+                  const failRow = data.find((d) => d.packageId === packageId);
+                  message.info('Discrepancy saved.');
+                  console.log('Discrepancy detail:', failRow?.discrepancyDetail);
+                  setQualityCheck('');
+                }}
+              >
+                Save Detail
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Quantity Check Section */}
+        <div>
+          <p style={{ fontWeight: 500, marginBottom: 4 }}>🧮 Quantity Check</p>
+          <p style={{ marginBottom: 0 }}>
+            Attach and scan the RFID to verify the quantity. <br />
+            The inspection results will be displayed below. <br />
+            ※ Only for packages that passed quality check!
+          </p>
+        </div>
+      </div>
+    </Card>
+  </Col>
       </Row>
 
       <Card title="3. TQ Inspection Result">
