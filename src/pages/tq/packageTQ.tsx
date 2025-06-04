@@ -17,6 +17,12 @@ interface TQRecord {
   employeeId: string;
 }
 
+interface PackageInfo {
+  productId: string;
+  productName: string;
+  orderQuantity: number;
+}
+
 const dummyData: TQRecord[] = [
   {
     packageId: 'pkg-00123',
@@ -46,18 +52,14 @@ const dummyData: TQRecord[] = [
 
 const productNameMap: Record<string, string> = {
   PROD4100: 'Apple iPhone 16 Pro',
-  // 필요시 여기에 더 추가
+  // 필요한 제품은 여기에 계속 추가
 };
 
 const PackageTQPage: React.FC = () => {
   const [packageId, setPackageId] = useState('');
   const [qualityCheck, setQualityCheck] = useState('');
   const [data, setData] = useState<TQRecord[]>(dummyData);
-  const [packageInfo, setPackageInfo] = useState<{
-    productId: string;
-    productName: string;
-    orderQuantity: string;
-  } | null>(null);
+  const [packageInfo, setPackageInfo] = useState<PackageInfo[]>([]);
 
   const handleSearch = async () => {
     if (!packageId) {
@@ -70,24 +72,25 @@ const PackageTQPage: React.FC = () => {
         `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/package/${packageId}`,
         {
           headers: {
-            'Authorization': 'adm-12345678',
+            Authorization: 'adm-12345678',
           },
         }
       );
 
       const res = response.data;
-
       const productName = productNameMap[res.product_id] || 'Unknown';
 
-      setPackageInfo({
-        productId: res.product_id,
-        productName,
-        orderQuantity: res.quantity,
-      });
+      setPackageInfo([
+        {
+          productId: res.product_id,
+          productName,
+          orderQuantity: res.quantity,
+        },
+      ]);
     } catch (err) {
       console.error(err);
       message.error('Failed to fetch package info');
-      setPackageInfo(null);
+      setPackageInfo([]);
     }
   };
 
@@ -95,7 +98,7 @@ const PackageTQPage: React.FC = () => {
     console.log('Submitting quality check:', qualityCheck);
   };
 
-  const columns: ColumnsType<TQRecord> = [
+  const tqColumns: ColumnsType<TQRecord> = [
     {
       title: 'Package ID',
       dataIndex: 'packageId',
@@ -146,6 +149,24 @@ const PackageTQPage: React.FC = () => {
     },
   ];
 
+  const packageInfoColumns: ColumnsType<PackageInfo> = [
+    {
+      title: 'Product ID',
+      dataIndex: 'productId',
+      key: 'productId',
+    },
+    {
+      title: 'Product Name',
+      dataIndex: 'productName',
+      key: 'productName',
+    },
+    {
+      title: 'Ordered Quantity',
+      dataIndex: 'orderQuantity',
+      key: 'orderQuantity',
+    },
+  ];
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <Row gutter={16}>
@@ -165,15 +186,13 @@ const PackageTQPage: React.FC = () => {
 
             <div style={{ marginTop: 16 }}>
               <div>📦 Package Information</div>
-              {packageInfo ? (
-                <p>
-                  <strong>Product ID:</strong> {packageInfo.productId} <br />
-                  <strong>Product Name:</strong> {packageInfo.productName} <br />
-                  <strong>Order Quantity:</strong> {packageInfo.orderQuantity}
-                </p>
-              ) : (
-                <p>No package information</p>
-              )}
+              <Table
+                columns={packageInfoColumns}
+                dataSource={packageInfo}
+                pagination={false}
+                rowKey="productId"
+                style={{ marginTop: 8 }}
+              />
             </div>
           </Card>
         </Col>
@@ -203,7 +222,7 @@ const PackageTQPage: React.FC = () => {
 
       <Card title="3. TQ Inspection Result">
         <Table
-          columns={columns}
+          columns={tqColumns}
           dataSource={data}
           pagination={{ pageSize: 5 }}
           rowKey="packageId"
