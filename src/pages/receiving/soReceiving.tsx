@@ -252,13 +252,9 @@ export default function ReceivingProcess() {
             <div style={{ display: 'flex', gap: 8 }}>
               <Input
                 ref={soRef}
+                autoFocus
                 value={so}
-                onChange={(e) => {
-                  setSo(e.target.value);
-                  if (e.target.value.trim()) {
-                    setTimeout(() => doc1Ref.current?.focus(), 100);
-                  }
-                }}
+                onChange={(e) => setSo(e.target.value)}
                 placeholder="SO"
                 style={{ flex: 1 }}
                 onPressEnter={() => doc1Ref.current?.focus()}
@@ -272,12 +268,7 @@ export default function ReceivingProcess() {
               <Input
                 ref={doc1Ref}
                 value={doc1}
-                onChange={(e) => {
-                  setDoc1(e.target.value);
-                  if (e.target.value.trim()) {
-                    setTimeout(() => doc2Ref.current?.focus(), 100);
-                  }
-                }}
+                onChange={(e) => setDoc1(e.target.value)}
                 placeholder="INV"
                 style={{ flex: 1 }}
                 onPressEnter={() => doc2Ref.current?.focus()}
@@ -291,12 +282,7 @@ export default function ReceivingProcess() {
               <Input
                 ref={doc2Ref}
                 value={doc2}
-                onChange={(e) => {
-                  setDoc2(e.target.value);
-                  if (e.target.value.trim()) {
-                    setTimeout(() => doc3Ref.current?.focus(), 100);
-                  }
-                }}
+                onChange={(e) => setDoc2(e.target.value)}
                 placeholder="BOE"
                 style={{ flex: 1 }}
                 onPressEnter={() => doc3Ref.current?.focus()}
@@ -310,15 +296,7 @@ export default function ReceivingProcess() {
               <Input
                 ref={doc3Ref}
                 value={doc3}
-                onChange={(e) => {
-                  setDoc3(e.target.value);
-                  if (e.target.value.trim()) {
-                    setTimeout(() => {
-                      const quantityInput = document.getElementById('quantity-input');
-                      quantityInput?.focus();
-                    }, 100);
-                  }
-                }}
+                onChange={(e) => setDoc3(e.target.value)}
                 placeholder="AWB"
                 style={{ flex: 1 }}
                 onPressEnter={() => {
@@ -350,6 +328,7 @@ export default function ReceivingProcess() {
             </Button>
           </Form.Item>
         </Form>
+
       </Card>
 
       <Card title={<Title level={5}>Receiving Result</Title>} bordered>
