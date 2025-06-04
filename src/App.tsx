@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import 'antd/dist/antd.css';
-import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './layout/applayout';
 
 import LoginPage from './pages/login/login';
@@ -34,17 +34,7 @@ import DispatchPage from './pages/dispatch';
 import MyPackingPage from './pages/dispatch/mypacking';
 import DispatchInspectionPage from './pages/dispatch/dispatchinspection';
 
-// 역할별 기본 랜딩 경로 설정
-const defaultRouteByRole: Record<string, string> = {
-  admin: '/dashboard',
-  receiver: '/receiving/soreceiving',
-  tq_employee: '/tq/package',
-  binner: '/binning/assign',
-};
-
-// 내부 컴포넌트로 감싸서 useNavigate 사용
-function AppWrapper() {
-  const navigate = useNavigate();
+export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -85,90 +75,82 @@ function AppWrapper() {
   {console.log('🔐 App에서 전달하는 userRole:', userInfo?.role)}
 
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          <LoginPage
-            onLogin={({ role, employeeId }) => {
-              setIsAuthenticated(true);
-              setUserInfo({ role, employeeId });
-              const route = defaultRouteByRole[role] ?? '/dashboard';
-              navigate(route); // ✅ 역할 기반 페이지로 이동
-            }}
-          />
-        }
-      />
-
-      <Route
-        path="/*"
-        element={
-          <PrivateRoute isAuthenticated={isAuthenticated}>
-            <AppLayout
-              collapsed={collapsed}
-              setCollapsed={setCollapsed}
-              selectedMenu={selectedMenu}
-              setSelectedMenu={setSelectedMenu}
-              userRole={userInfo?.role}
-              employeeId={userInfo?.employeeId}
-            />
-          </PrivateRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="master" element={<MasterPage />} />
-
-        {/* Storing Order */}
-        <Route path="storingorder" element={<SOPage />}>
-          <Route path="list" element={<SOListPage />} />
-        </Route>
-
-        {/* Receiving */}
-        <Route path="receiving" element={<ReceivingPage />}>
-          <Route path="soreceiving" element={<SOReceivingPage />} />
-          <Route path="list" element={<ReceivingListPage />} />
-        </Route>
-
-        {/* Technical Query */}
-        <Route path="tq" element={<TQPage />}>
-          <Route path="package" element={<PackageTQPage />} />
-        </Route>
-
-        {/* Binning */}
-        <Route path="binning" element={<BinningPage />}>
-          <Route path="assign" element={<BinAssignPage />} />
-        </Route>
-
-        {/* Inventory */}
-        <Route path="inventory" element={<InventoryPage />}>
-          <Route path="management" element={<InventoryMgtPage />} />
-          <Route path="reconciliation" element={<InventoryReconPage />} />
-        </Route>
-
-        {/* Picking */}
-        <Route path="picking" element={<PickingPage />}>
-          <Route path="mypicking" element={<MyPickingPage />} />
-          <Route path="pickslip" element={<PickSlipPage />} />
-        </Route>
-
-        {/* Dispatch */}
-        <Route path="dispatch" element={<DispatchPage />}>
-          <Route path="mypacking" element={<MyPackingPage />} />
-          <Route path="inspection" element={<DispatchInspectionPage />} />
-        </Route>
-      </Route>
-
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
-  );
-}
-
-// 최상단 Router 설정
-export default function App() {
-  return (
     <Router>
-      <AppWrapper />
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <LoginPage
+              onLogin={({ role, employeeId }) => {
+                setIsAuthenticated(true);
+                setUserInfo({ role, employeeId });
+                // ✅ navigate는 LoginPage 내부에서 실행됨
+              }}
+            />
+          }
+        />
+
+        <Route
+          path="/*"
+          element={
+            <PrivateRoute isAuthenticated={isAuthenticated}>
+              <AppLayout
+                collapsed={collapsed}
+                setCollapsed={setCollapsed}
+                selectedMenu={selectedMenu}
+                setSelectedMenu={setSelectedMenu}
+                userRole={userInfo?.role}
+                employeeId={userInfo?.employeeId}
+              />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="master" element={<MasterPage />} />
+
+          {/* Storing Order */}
+          <Route path="storingorder" element={<SOPage />}>
+            <Route path="list" element={<SOListPage />} />
+          </Route>
+
+          {/* Receiving */}
+          <Route path="receiving" element={<ReceivingPage />}>
+            <Route path="soreceiving" element={<SOReceivingPage />} />
+            <Route path="list" element={<ReceivingListPage />} />
+          </Route>
+
+          {/* Technical Query */}
+          <Route path="tq" element={<TQPage />}>
+            <Route path="package" element={<PackageTQPage />} />
+          </Route>
+
+          {/* Binning */}
+          <Route path="binning" element={<BinningPage />}>
+            <Route path="assign" element={<BinAssignPage />} />
+          </Route>
+
+          {/* Inventory */}
+          <Route path="inventory" element={<InventoryPage />}>
+            <Route path="management" element={<InventoryMgtPage />} />
+            <Route path="reconciliation" element={<InventoryReconPage />} />
+          </Route>
+
+          {/* Picking */}
+          <Route path="picking" element={<PickingPage />}>
+            <Route path="mypicking" element={<MyPickingPage />} />
+            <Route path="pickslip" element={<PickSlipPage />} />
+          </Route>
+
+          {/* Dispatch */}
+          <Route path="dispatch" element={<DispatchPage />}>
+            <Route path="mypacking" element={<MyPackingPage />} />
+            <Route path="inspection" element={<DispatchInspectionPage />} />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </Router>
   );
 }

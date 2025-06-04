@@ -1,10 +1,10 @@
 // src/pages/tq/package.tsx
 
 import React, { useState } from 'react';
-import { Card, Row, Col, Input, Button, Table, Select } from 'antd';
+import axios from 'axios';
+import { Card, Row, Col, Input, Button, Table, Select, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
-const { Search } = Input;
 const { Option } = Select;
 
 interface TQRecord {
@@ -44,18 +44,54 @@ const dummyData: TQRecord[] = [
   },
 ];
 
+const productNameMap: Record<string, string> = {
+  PROD4100: 'Apple iPhone 16 Pro',
+  // 필요시 여기에 더 추가
+};
+
 const PackageTQPage: React.FC = () => {
   const [packageId, setPackageId] = useState('');
   const [qualityCheck, setQualityCheck] = useState('');
   const [data, setData] = useState<TQRecord[]>(dummyData);
+  const [packageInfo, setPackageInfo] = useState<{
+    productId: string;
+    productName: string;
+    orderQuantity: string;
+  } | null>(null);
 
-  const handleSearch = () => {
-    // TODO: API 연동하여 package 정보 불러오기
-    console.log('Searching package:', packageId);
+  const handleSearch = async () => {
+    if (!packageId) {
+      message.warning('Please enter a Package ID');
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/package/${packageId}`,
+        {
+          headers: {
+            'Authorization': 'adm-12345678',
+          },
+        }
+      );
+
+      const res = response.data;
+
+      const productName = productNameMap[res.product_id] || 'Unknown';
+
+      setPackageInfo({
+        productId: res.product_id,
+        productName,
+        orderQuantity: res.quantity,
+      });
+    } catch (err) {
+      console.error(err);
+      message.error('Failed to fetch package info');
+      setPackageInfo(null);
+    }
   };
 
   const handleQualitySubmit = () => {
-    // TODO: API 연동하여 quality check 저장
     console.log('Submitting quality check:', qualityCheck);
   };
 
@@ -126,13 +162,18 @@ const PackageTQPage: React.FC = () => {
                 Search
               </Button>
             </Input.Group>
+
             <div style={{ marginTop: 16 }}>
               <div>📦 Package Information</div>
-              <p>
-                <strong>Product ID:</strong> pid-00123<br />
-                <strong>Product Name:</strong> Apple iPhone 13 Pro<br />
-                <strong>Order Quantity:</strong> 12
-              </p>
+              {packageInfo ? (
+                <p>
+                  <strong>Product ID:</strong> {packageInfo.productId} <br />
+                  <strong>Product Name:</strong> {packageInfo.productName} <br />
+                  <strong>Order Quantity:</strong> {packageInfo.orderQuantity}
+                </p>
+              ) : (
+                <p>No package information</p>
+              )}
             </div>
           </Card>
         </Col>

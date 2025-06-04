@@ -42,7 +42,7 @@ export default function ReceivingProcess() {
         `https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders`,
         {
           headers: {
-            Authorization: 'adm',
+            Authorization: 'adm-12345678',
           },
         }
       );
