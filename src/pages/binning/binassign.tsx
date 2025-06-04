@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Input, Button, Table, message, Spin } from 'antd';
+import { Card, Row, Col, Input, Button, Table, Tag, message, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
 interface PackageInfo {
@@ -24,7 +24,7 @@ interface RawPackage {
   product_id: string;
   quantity: string;
   status: string;
-  bin_allocation?: Record<string, number>;
+  bin_allocation?: Record<string, number> | string | null;
   binning_date?: string;
 }
 
@@ -32,6 +32,15 @@ const productNameMap: Record<string, string> = {
   'prd-824922': 'Apple iPhone 16 Pro',
   'prd-824923': 'Samsung Galaxy S22',
   'prd-824924': 'Google Pixel 7',
+  'PROD3': 'Google Pixel 7',
+};
+
+const statusColorMap: Record<string, string> = {
+  PENDING: 'orange',
+  BIN_ASSIGNED: 'green',
+  BINNING_DONE: 'blue',
+  'READY-FOR-BINNING': 'purple',
+  FAILED: 'red',
 };
 
 const BinningPage: React.FC = () => {
@@ -58,8 +67,21 @@ const BinningPage: React.FC = () => {
       const rows: BinnedRow[] = [];
 
       all.forEach((pkg) => {
-        const allocations = pkg.bin_allocation || {};
-        Object.entries(allocations).forEach(([bin, qty]) => {
+        if (!pkg.bin_allocation) return;
+
+        let allocation: Record<string, number> = {};
+
+        try {
+          allocation =
+            typeof pkg.bin_allocation === 'string'
+              ? JSON.parse(pkg.bin_allocation)
+              : pkg.bin_allocation;
+        } catch (err) {
+          console.warn(`Invalid bin_allocation JSON for package ${pkg.package_id}`);
+          return;
+        }
+
+        Object.entries(allocation).forEach(([bin, qty]) => {
           rows.push({
             packageId: pkg.package_id,
             status: pkg.status,
@@ -117,7 +139,14 @@ const BinningPage: React.FC = () => {
 
   const binnedListColumns: ColumnsType<BinnedRow> = [
     { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
-    { title: 'Status', dataIndex: 'status', key: 'status' },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <Tag color={statusColorMap[status] || 'default'}>{status}</Tag>
+      ),
+    },
     { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
     { title: 'Bin Location', dataIndex: 'binLocation', key: 'binLocation' },
     { title: 'Assigned Quantity', dataIndex: 'assignedQuantity', key: 'assignedQuantity' },
