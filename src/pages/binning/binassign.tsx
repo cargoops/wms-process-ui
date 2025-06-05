@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Input, Button, Table, Tag, message, Spin } from 'antd';
+import { Card, Row, Col, Input, Button, Table, Tag, message, Spin, Modal } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -59,6 +59,10 @@ const BinningPage: React.FC = () => {
   const [binnedList, setBinnedList] = useState<BinnedRow[]>([]);
   const [allPackages, setAllPackages] = useState<RawPackage[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 🚨 에러 모달 상태 추가
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const fetchPackages = async () => {
     setLoading(true);
@@ -169,12 +173,12 @@ const BinningPage: React.FC = () => {
         }
       );
 
-      console.log('📦 Bin Allocation API Response:', res.data); // ✅ 콘솔 출력
+      console.log('📦 Bin Allocation API Response:', res.data);
 
       const allocation = res.data.bin_allocation;
 
       if (!allocation || typeof allocation !== 'object') {
-        message.error('❌ 잘못된 bin allocation 응답');
+        message.error('❌ Bin Allocation Failed');
         setBinAllocResult([]);
         return;
       }
@@ -190,11 +194,14 @@ const BinningPage: React.FC = () => {
       console.error('❌ Bin Allocation 실패', err);
       setBinAllocResult([]);
 
-      if (err.response?.status === 403) {
+      const status = err.response?.status;
+
+      if (status === 403) {
         message.error('❌ 권한이 없습니다.');
-      } else if (err.response?.status === 400) {
-        message.error('❌ 상태 오류 또는 공간 부족');
-      } else if (err.response?.status === 404) {
+      } else if (status === 400) {
+        setErrorMessage('❌ Not Enough Bin Space');
+        setErrorModalVisible(true);
+      } else if (status === 404) {
         message.error('❌ 해당 패키지를 찾을 수 없습니다');
       } else {
         message.error('❌ 알 수 없는 오류 발생');
@@ -309,6 +316,17 @@ const BinningPage: React.FC = () => {
           />
         )}
       </Card>
+
+      {/* 🚨 Error Modal */}
+      <Modal
+        open={errorModalVisible}
+        onOk={() => setErrorModalVisible(false)}
+        onCancel={() => setErrorModalVisible(false)}
+        centered
+        title="🚫 Bin Allocation Error"
+      >
+        <p>{errorMessage}</p>
+      </Modal>
     </div>
   );
 };
