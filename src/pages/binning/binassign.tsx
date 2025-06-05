@@ -40,10 +40,10 @@ interface BinAllocRow {
 }
 
 const productNameMap: Record<string, string> = {
-  'prd-824922': 'Apple iPhone 16 Pro',
-  'prd-824923': 'Samsung Galaxy S22',
-  'prd-824924': 'Google Pixel 7',
-  'PROD3': 'Google Pixel 7',
+  PROD11: 'Large Item',
+  PROD12: 'Medium Item',
+  PROD13: 'Small Item',
+  PROD14: 'Tiny Item',
 };
 
 const statusColorMap: Record<string, string> = {

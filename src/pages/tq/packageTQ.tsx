@@ -26,6 +26,10 @@ const productNameMap: Record<string, string> = {
   PROD1: 'Apple iPhone 13 Pro',
   PROD2: 'Samsung Galaxy S22',
   PROD3: 'Google Pixel 7',
+  PROD11: 'Large Item',
+  PROD12: 'Medium Item',
+  PROD13: 'Small Item',
+  PROD14: 'Tiny Item',
 };
 
 const PackageTQPage: React.FC = () => {
