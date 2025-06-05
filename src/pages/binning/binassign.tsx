@@ -169,11 +169,23 @@ const BinningPage: React.FC = () => {
         }
       );
 
-      const bin_id = res.data.bin_id;
-      const quantity = res.data.quantity;
+      console.log('📦 Bin Allocation API Response:', res.data); // ✅ 콘솔 출력
 
-      setBinAllocResult([{ binLocation: bin_id, quantity }]);
-      message.success(`✅ Bin 할당 성공: ${bin_id} (${quantity})`);
+      const allocation = res.data.bin_allocation;
+
+      if (!allocation || typeof allocation !== 'object') {
+        message.error('❌ 잘못된 bin allocation 응답');
+        setBinAllocResult([]);
+        return;
+      }
+
+      const binRows: BinAllocRow[] = Object.entries(allocation).map(([binLocation, quantity]) => ({
+        binLocation,
+        quantity: quantity as number,
+      }));
+
+      setBinAllocResult(binRows);
+      message.success(`✅ Bin 할당 성공 (${binRows.length}개 위치)`);
     } catch (err: any) {
       console.error('❌ Bin Allocation 실패', err);
       setBinAllocResult([]);
