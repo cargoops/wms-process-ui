@@ -2,7 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Card, Row, Col, Input, Button, Table, Tag, message, Spin, Modal } from 'antd';
+import {
+  Card,
+  Row,
+  Col,
+  Input,
+  Button,
+  Table,
+  Tag,
+  message,
+  Spin,
+  Modal,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { ReloadOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
@@ -60,7 +71,6 @@ const BinningPage: React.FC = () => {
   const [allPackages, setAllPackages] = useState<RawPackage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🚨 에러 모달 상태 추가
   const [errorModalVisible, setErrorModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -173,8 +183,6 @@ const BinningPage: React.FC = () => {
         }
       );
 
-      console.log('📦 Bin Allocation API Response:', res.data);
-
       const allocation = res.data.bin_allocation;
 
       if (!allocation || typeof allocation !== 'object') {
@@ -183,10 +191,12 @@ const BinningPage: React.FC = () => {
         return;
       }
 
-      const binRows: BinAllocRow[] = Object.entries(allocation).map(([binLocation, quantity]) => ({
-        binLocation,
-        quantity: quantity as number,
-      }));
+      const binRows: BinAllocRow[] = Object.entries(allocation).map(
+        ([binLocation, quantity]) => ({
+          binLocation,
+          quantity: quantity as number,
+        })
+      );
 
       setBinAllocResult(binRows);
       message.success(`✅ Bin 할당 성공 (${binRows.length}개 위치)`);
@@ -242,29 +252,39 @@ const BinningPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        rowGap: 24,
+        padding: '16px',
+        maxWidth: 1200,
+        margin: '0 auto',
+      }}
+    >
       <Card title="Bin Assignment">
-        <Row gutter={16} style={{ marginBottom: 16 }}>
-          <Col>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8} lg={6}>
             <Input
               placeholder="Package ID"
               value={packageId}
               onChange={(e) => setPackageId(e.target.value)}
-              style={{ width: 200 }}
+              style={{ width: '100%' }}
             />
           </Col>
-          <Col>
-            <Button type="primary" onClick={handleAssign}>
+          <Col xs={24} sm={12} md={8} lg={4}>
+            <Button type="primary" onClick={handleAssign} block>
               Assign
             </Button>
           </Col>
-          <Col>
+          <Col xs={24} sm={12} md={8} lg={4}>
             <Button
               onClick={() => {
                 setPackageId('');
                 setPackageInfo([]);
                 setBinAllocResult([]);
               }}
+              block
             >
               Done
             </Button>
@@ -272,7 +292,7 @@ const BinningPage: React.FC = () => {
         </Row>
 
         {packageInfo.length > 0 && (
-          <Row gutter={24}>
+          <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
             <Col xs={24} lg={12}>
               <Table
                 title={() => '📦 Package Information'}
@@ -280,6 +300,7 @@ const BinningPage: React.FC = () => {
                 dataSource={packageInfo}
                 pagination={false}
                 rowKey="productId"
+                scroll={{ x: true }}
               />
             </Col>
             <Col xs={24} lg={12}>
@@ -289,6 +310,7 @@ const BinningPage: React.FC = () => {
                 dataSource={binAllocResult}
                 pagination={false}
                 rowKey="binLocation"
+                scroll={{ x: true }}
               />
             </Col>
           </Row>
@@ -313,11 +335,11 @@ const BinningPage: React.FC = () => {
             dataSource={binnedList}
             pagination={{ pageSize: 5 }}
             rowKey={(row) => `${row.packageId}-${row.binLocation}`}
+            scroll={{ x: true }}
           />
         )}
       </Card>
 
-      {/* 🚨 Error Modal */}
       <Modal
         open={errorModalVisible}
         onOk={() => setErrorModalVisible(false)}
