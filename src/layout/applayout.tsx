@@ -44,7 +44,7 @@ const menuTitleMap: Record<string, string> = {
   'binning/assign': 'Binning',
   'inventory/management': 'Inventory Management',
   'inventory/reconciliation': 'Inventory Reconciliation',
-  'picking/mypicking': 'My Picking',
+  'picking/mypicking': 'Pick Slip List',
   'picking/pickslip': 'Pick Slip',
   'dispatch/mypacking': 'My Packing',
   'dispatch/inspection': 'Dispatch Inspection',
@@ -184,10 +184,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       </Menu.SubMenu>
       <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking" style={getItemStyle('picking')}>
         <Menu.Item key="picking/mypicking" style={getItemStyle('picking/mypicking')}>
-          My Picking
-        </Menu.Item>
-        <Menu.Item key="picking/pickslip" style={getItemStyle('picking/pickslip')}>
-          Pick Slip
+          Pick Slip List
         </Menu.Item>
       </Menu.SubMenu>
       <Menu.SubMenu key="dispatch" icon={<SendOutlined />} title="Dispatch" style={getItemStyle('dispatch')}>

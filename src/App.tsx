@@ -28,7 +28,6 @@ import InventoryReconPage from './pages/inventory/inventoryrecon';
 
 import PickingPage from './pages/picking';
 import MyPickingPage from './pages/picking/mypicking';
-import PickSlipPage from './pages/picking/pickslip';
 
 import DispatchPage from './pages/dispatch';
 import MyPackingPage from './pages/dispatch/mypacking';
@@ -69,7 +68,6 @@ export default function App() {
     'inventory/management': 'Inventory Management',
     'inventory/reconciliation': 'Inventory Reconciliation',
     'picking/mypicking': 'My Picking',
-    'picking/pickslip': 'Pick Slip List',
   };
 
   {console.log('🔐 App에서 전달하는 userRole:', userInfo?.role)}
@@ -139,7 +137,6 @@ export default function App() {
           {/* Picking */}
           <Route path="picking" element={<PickingPage />}>
             <Route path="mypicking" element={<MyPickingPage />} />
-            <Route path="pickslip" element={<PickSlipPage />} />
           </Route>
 
           {/* Dispatch */}
