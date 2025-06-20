@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Tag, Input, Space, message, Card } from 'antd';
+import { Table, Tag, Input, Space, message, Card, Tabs } from 'antd';
 import axios from 'axios';
 
 const { Search } = Input;
+const { TabPane } = Tabs;
 
 interface PickSlip {
   pick_slip_id: string;
@@ -38,10 +39,12 @@ const statusColorMap: Record<string, string> = {
   CLOSE: 'green',
 };
 
-const PickSlipWithOrderTable: React.FC = () => {
-  const [pickSlips, setPickSlips] = useState<PickSlip[]>([]);
+const PickSlipOrderTabbedView: React.FC = () => {
   const [pickOrders, setPickOrders] = useState<PickOrder[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tabs, setTabs] = useState<string[]>([]);
+  const [tabOrders, setTabOrders] = useState<Record<string, PickOrder[]>>({});
+  const [pickSlips, setPickSlips] = useState<PickSlip[]>([]);
   const [filtered, setFiltered] = useState<PickSlip[]>([]);
 
   useEffect(() => {
@@ -51,22 +54,20 @@ const PickSlipWithOrderTable: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [slipsRes, ordersRes] = await Promise.all([
-        axios.get<PickSlip[]>(
-          'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-slips',
-          { headers: { Authorization: 'adm-12345678' } }
-        ),
-        axios.get<PickOrder[]>(
-          'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-orders',
-          { headers: { Authorization: 'adm-12345678' } }
-        ),
+      const [slipRes, orderRes] = await Promise.all([
+        axios.get<PickSlip[]>('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-slips', {
+          headers: { Authorization: 'adm-12345678' },
+        }),
+        axios.get<PickOrder[]>('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-orders', {
+          headers: { Authorization: 'adm-12345678' },
+        }),
       ]);
 
-      setPickSlips(slipsRes.data);
-      setFiltered(slipsRes.data);
-      setPickOrders(ordersRes.data);
+      setPickOrders(orderRes.data);
+      setPickSlips(slipRes.data);
+      setFiltered(slipRes.data);
 
-      console.log('Fetched pick orders:', ordersRes.data);
+      console.log('Fetched pick orders:', orderRes.data);
     } catch (err) {
       message.error('Failed to load data');
     } finally {
@@ -75,25 +76,48 @@ const PickSlipWithOrderTable: React.FC = () => {
   };
 
   const handleSearch = (value: string) => {
-    const filtered = pickSlips.filter(item =>
+    const result = pickSlips.filter(item =>
       item.pick_slip_id.toLowerCase().includes(value.toLowerCase())
     );
-    setFiltered(filtered);
+    setFiltered(result);
+  };
+
+  const handlePickSlipClick = (slipId: string) => {
+    if (tabs.includes(slipId)) return;
+
+    const orders = pickOrders.filter(o => o.pick_slip_id === slipId);
+    setTabOrders(prev => ({ ...prev, [slipId]: orders }));
+    setTabs(prev => [...prev, slipId]);
+  };
+
+  const handleTabEdit = (
+    targetKey: string | React.MouseEvent | React.KeyboardEvent,
+    action: 'add' | 'remove'
+  ) => {
+    if (action === 'remove' && typeof targetKey === 'string') {
+      setTabs(prev => prev.filter(tab => tab !== targetKey));
+      setTabOrders(prev => {
+        const updated = { ...prev };
+        delete updated[targetKey];
+        return updated;
+      });
+    }
   };
 
   const pickSlipColumns = [
-    { title: 'Pick Slip ID', dataIndex: 'pick_slip_id', key: 'pick_slip_id' },
+    {
+      title: 'Pick Slip ID',
+      dataIndex: 'pick_slip_id',
+      key: 'pick_slip_id',
+      render: (text: string) => (
+        <a onClick={() => handlePickSlipClick(text)} style={{ textDecoration: 'underline', cursor: 'pointer' }}>
+          {text}
+        </a>
+      ),
+    },
     { title: 'Customer ID', dataIndex: 'customer_id', key: 'customer_id' },
-    {
-      title: 'Requested Delivery Date',
-      dataIndex: 'requested_delivery_date',
-      key: 'requested_delivery_date',
-    },
-    {
-      title: 'Pick Slip Created Date',
-      dataIndex: 'pick_slip_created_date',
-      key: 'pick_slip_created_date',
-    },
+    { title: 'Requested Delivery Date', dataIndex: 'requested_delivery_date', key: 'requested_delivery_date' },
+    { title: 'Pick Slip Created Date', dataIndex: 'pick_slip_created_date', key: 'pick_slip_created_date' },
     {
       title: 'Status',
       dataIndex: 'pick_slip_status',
@@ -108,7 +132,6 @@ const PickSlipWithOrderTable: React.FC = () => {
 
   const pickOrderColumns = [
     { title: 'Pick Order ID', dataIndex: 'pick_order_id', key: 'pick_order_id' },
-    { title: 'Pick Slip ID', dataIndex: 'pick_slip_id', key: 'pick_slip_id' },
     { title: 'Picking Zone', dataIndex: 'picking_zone', key: 'picking_zone' },
     {
       title: 'Bin / Product / Qty',
@@ -116,15 +139,10 @@ const PickSlipWithOrderTable: React.FC = () => {
       key: 'pick_task',
       render: (task: any) => {
         try {
-          const parsed = typeof task === 'string'
-            ? JSON.parse(task.replace(/'/g, '"'))
-            : task;
-
+          const parsed = typeof task === 'string' ? JSON.parse(task.replace(/'/g, '"')) : task;
           const arr = Array.isArray(parsed) ? parsed : [parsed];
           return arr.map((t, i) => (
-            <div key={i}>
-              {t.bin_id} / {t.product_id || t.product_Id} / {t.quantity}
-            </div>
+            <div key={i}>{t.bin_id} / {t.product_id || t.product_Id} / {t.quantity}</div>
           ));
         } catch {
           return '-';
@@ -145,43 +163,41 @@ const PickSlipWithOrderTable: React.FC = () => {
 
   return (
     <div style={{ padding: 24, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      <Card
-        title="Pick Slip List"
-        style={{ marginBottom: 24, borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-        bodyStyle={{ padding: 24 }}
-      >
+      <Card title="Pick Slip List" style={{ marginBottom: 24 }}>
         <Space style={{ marginBottom: 16 }}>
-          <Search
-            placeholder="Search Pick Slip ID"
-            onSearch={handleSearch}
-            enterButton
-            allowClear
-          />
+          <Search placeholder="Search Pick Slip ID" onSearch={handleSearch} enterButton allowClear />
         </Space>
         <Table
           columns={pickSlipColumns}
           dataSource={filtered}
-          loading={loading}
           rowKey="pick_slip_id"
+          loading={loading}
           pagination={{ pageSize: 5 }}
         />
       </Card>
 
-      <Card
-        title="Pick Order List"
-        style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-        bodyStyle={{ padding: 24 }}
-      >
-        <Table
-          columns={pickOrderColumns}
-          dataSource={pickOrders}
-          rowKey="pick_order_id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-        />
-      </Card>
+      {tabs.length > 0 && (
+        <Card title="Pick Order List (by Pick Slip)" style={{ marginTop: 24 }}>
+          <Tabs
+            type="editable-card"
+            hideAdd
+            onEdit={handleTabEdit}
+          >
+            {tabs.map(slipId => (
+              <TabPane tab={slipId} key={slipId} closable>
+                <Table
+                  columns={pickOrderColumns}
+                  dataSource={tabOrders[slipId]}
+                  rowKey="pick_order_id"
+                  pagination={{ pageSize: 10 }}
+                />
+              </TabPane>
+            ))}
+          </Tabs>
+        </Card>
+      )}
     </div>
   );
 };
 
-export default PickSlipWithOrderTable;
+export default PickSlipOrderTabbedView;
