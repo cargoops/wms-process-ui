@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Col, Row, Table, Tag } from 'antd';
-import { CheckCircleTwoTone, CloseCircleTwoTone } from '@ant-design/icons';
+import { Card, Col, Row, Table, Tag, Button } from 'antd';
+import { CheckCircleTwoTone, CloseCircleTwoTone, ReloadOutlined } from '@ant-design/icons';
 
 interface InventoryItem {
   bin_id: string;
@@ -10,8 +10,10 @@ interface InventoryItem {
 
 export default function InventoryMgtPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchInventory = () => {
+    setLoading(true);
     fetch('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/inventory', {
       headers: {
         Authorization: 'adm-12345678',
@@ -27,7 +29,9 @@ export default function InventoryMgtPage() {
             return numA - numB;
           });
         setInventory(validBins);
-      });
+      })
+      .catch((err) => console.error(err))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => {
@@ -36,7 +40,7 @@ export default function InventoryMgtPage() {
 
   const renderBinCard = (item: InventoryItem, index: number) => {
     const binNum = item.bin_id.replace('BIN', '');
-    const isPass = index % 2 !== 1; // Bin 01, 02 fail (❌), 나머지 pass (✅)
+    const isPass = index % 2 !== 1;
     const statusIcon = isPass ? (
       <CheckCircleTwoTone twoToneColor="#52c41a" />
     ) : (
@@ -145,7 +149,6 @@ export default function InventoryMgtPage() {
       {/* Dashboard Area */}
       <div style={{ backgroundColor: '#1890ff', padding: '24px', borderRadius: 8 }}>
         <Row>
-          {/* 왼쪽 Rack 가이드 */}
           <Col flex="40px">
             <div style={{
               height: '100%',
@@ -163,7 +166,6 @@ export default function InventoryMgtPage() {
             </div>
           </Col>
 
-          {/* 오른쪽 Bin 카드들 */}
           <Col flex="auto">
             <div style={{ backgroundColor: '#e6f7ff', padding: '16px', borderRadius: 4, marginBottom: 16 }}>
               <Row gutter={[16, 16]}>
@@ -182,19 +184,19 @@ export default function InventoryMgtPage() {
       {/* Reconciliation Title + Refresh */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32 }}>
         <h3 style={{ margin: 0 }}>Inventory Reconciliation Result (Date: 2025-06-23)</h3>
-        <button
+        <Button
+          icon={<ReloadOutlined />}
           onClick={fetchInventory}
+          size="small"
+          loading={loading}
           style={{
-            backgroundColor: '#1890ff',
-            color: 'white',
-            border: 'none',
-            borderRadius: 4,
-            padding: '6px 12px',
-            cursor: 'pointer'
+            backgroundColor: 'white',
+            color: '#595959',
+            borderColor: '#d9d9d9',
           }}
         >
-          🔄 Refresh
-        </button>
+          Refresh
+        </Button>
       </div>
 
       <Table
