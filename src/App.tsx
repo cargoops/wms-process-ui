@@ -24,7 +24,6 @@ import BinAssignPage from './pages/binning/binassign';
 
 import InventoryPage from './pages/inventory';
 import InventoryMgtPage from './pages/inventory/inventorymgt';
-import InventoryReconPage from './pages/inventory/inventoryrecon';
 
 import PickingPage from './pages/picking';
 import MyPickingPage from './pages/picking/mypicking';
@@ -66,7 +65,6 @@ export default function App() {
     'dispatch/mypacking': 'My Packing',
     'dispatch/inspection': 'Dispatch Inspection',
     'inventory/management': 'Inventory Management',
-    'inventory/reconciliation': 'Inventory Reconciliation',
     'picking/mypicking': 'My Picking',
   };
 
@@ -131,7 +129,6 @@ export default function App() {
           {/* Inventory */}
           <Route path="inventory" element={<InventoryPage />}>
             <Route path="management" element={<InventoryMgtPage />} />
-            <Route path="reconciliation" element={<InventoryReconPage />} />
           </Route>
 
           {/* Picking */}

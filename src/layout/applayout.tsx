@@ -43,7 +43,6 @@ const menuTitleMap: Record<string, string> = {
   'tq/package': 'Package Technical Query',
   'binning/assign': 'Binning',
   'inventory/management': 'Inventory Management',
-  'inventory/reconciliation': 'Inventory Reconciliation',
   'picking/mypicking': 'Pick Slip List',
   'picking/pickslip': 'Pick Slip',
   'dispatch/mypacking': 'My Packing',
@@ -101,7 +100,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'binning/assign',
       'inventory',
       'inventory/management',
-      'inventory/reconciliation',
       'picking',
       'picking/mypicking',
       'picking/pickslip',
@@ -177,9 +175,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       <Menu.SubMenu key="inventory" icon={<CheckCircleOutlined />} title="Inventory" style={getItemStyle('inventory')}>
         <Menu.Item key="inventory/management" style={getItemStyle('inventory/management')}>
           Inventory Management
-        </Menu.Item>
-        <Menu.Item key="inventory/reconciliation" style={getItemStyle('inventory/reconciliation')}>
-          Inventory Reconciliation
         </Menu.Item>
       </Menu.SubMenu>
       <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking" style={getItemStyle('picking')}>
