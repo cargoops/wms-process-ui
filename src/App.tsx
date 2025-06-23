@@ -28,9 +28,6 @@ import InventoryMgtPage from './pages/inventory/inventorymgt';
 import PickingPage from './pages/picking';
 import MyPickingPage from './pages/picking/mypicking';
 
-import DispatchPage from './pages/dispatch';
-import MyPackingPage from './pages/dispatch/mypacking';
-import DispatchInspectionPage from './pages/dispatch/dispatchinspection';
 
 export default function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -47,7 +44,6 @@ export default function App() {
     binning: 'Binning',
     inventory: 'Inventory',
     picking: 'Picking',
-    dispatch: 'Dispatch',
     dashboard: 'Dashboard',
     master: 'Master',
   };
@@ -62,8 +58,6 @@ export default function App() {
     tqList: 'Technical Query List (All)',
     'binning/assign': 'Bin Assignment List',
     'binning/my': 'My Binning',
-    'dispatch/mypacking': 'My Packing',
-    'dispatch/inspection': 'Dispatch Inspection',
     'inventory/management': 'Inventory Management',
     'picking/mypicking': 'My Picking',
   };
@@ -136,11 +130,6 @@ export default function App() {
             <Route path="mypicking" element={<MyPickingPage />} />
           </Route>
 
-          {/* Dispatch */}
-          <Route path="dispatch" element={<DispatchPage />}>
-            <Route path="mypacking" element={<MyPackingPage />} />
-            <Route path="inspection" element={<DispatchInspectionPage />} />
-          </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/login" replace />} />

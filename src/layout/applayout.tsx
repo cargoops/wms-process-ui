@@ -45,8 +45,6 @@ const menuTitleMap: Record<string, string> = {
   'inventory/management': 'Inventory Management',
   'picking/mypicking': 'Pick Slip List',
   'picking/pickslip': 'Pick Slip',
-  'dispatch/mypacking': 'My Packing',
-  'dispatch/inspection': 'Dispatch Inspection',
 };
 
 interface AppLayoutProps {
@@ -103,9 +101,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'picking',
       'picking/mypicking',
       'picking/pickslip',
-      'dispatch',
-      'dispatch/mypacking',
-      'dispatch/inspection',
     ],
     receiver: ['receiving', 'receiving/soreceiving'],
     tq_employee: ['tq', 'tq/package'],
@@ -180,14 +175,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       <Menu.SubMenu key="picking" icon={<WarningOutlined />} title="Picking" style={getItemStyle('picking')}>
         <Menu.Item key="picking/mypicking" style={getItemStyle('picking/mypicking')}>
           Pick Slip List
-        </Menu.Item>
-      </Menu.SubMenu>
-      <Menu.SubMenu key="dispatch" icon={<SendOutlined />} title="Dispatch" style={getItemStyle('dispatch')}>
-        <Menu.Item key="dispatch/mypacking" style={getItemStyle('dispatch/mypacking')}>
-          My Packing
-        </Menu.Item>
-        <Menu.Item key="dispatch/inspection" style={getItemStyle('dispatch/inspection')}>
-          Dispatch Inspection
         </Menu.Item>
       </Menu.SubMenu>
     </Menu>

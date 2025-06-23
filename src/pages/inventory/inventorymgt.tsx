@@ -11,7 +11,7 @@ interface InventoryItem {
 export default function InventoryMgtPage() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
 
-  useEffect(() => {
+  const fetchInventory = () => {
     fetch('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/inventory', {
       headers: {
         Authorization: 'adm-12345678',
@@ -19,16 +19,24 @@ export default function InventoryMgtPage() {
     })
       .then((res) => res.json())
       .then((data) => {
-        const validBins = data.data.filter((item: any) =>
-          /^BIN[1-8]$/.test(item.bin_id)
-        );
+        const validBins = data.data
+          .filter((item: any) => /^BIN[1-8]$/.test(item.bin_id))
+          .sort((a: any, b: any) => {
+            const numA = parseInt(a.bin_id.replace('BIN', ''));
+            const numB = parseInt(b.bin_id.replace('BIN', ''));
+            return numA - numB;
+          });
         setInventory(validBins);
       });
+  };
+
+  useEffect(() => {
+    fetchInventory();
   }, []);
 
   const renderBinCard = (item: InventoryItem, index: number) => {
     const binNum = item.bin_id.replace('BIN', '');
-    const isPass = index % 2 !== 1; // Bin 01, 02 fail (❌), 나머지는 pass (✅)
+    const isPass = index % 2 !== 1; // Bin 01, 02 fail (❌), 나머지 pass (✅)
     const statusIcon = isPass ? (
       <CheckCircleTwoTone twoToneColor="#52c41a" />
     ) : (
@@ -115,11 +123,7 @@ export default function InventoryMgtPage() {
       dataIndex: 'recon_result',
       key: 'recon_result',
       render: (text: string) =>
-        text === 'Pass' ? (
-          <Tag color="green">Pass</Tag>
-        ) : (
-          <Tag color="red">Fail</Tag>
-        ),
+        text === 'Pass' ? <Tag color="green">Pass</Tag> : <Tag color="red">Fail</Tag>,
     },
   ];
 
@@ -138,23 +142,61 @@ export default function InventoryMgtPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1>Inventory Bin Status</h1>
-
       {/* Dashboard Area */}
       <div style={{ backgroundColor: '#1890ff', padding: '24px', borderRadius: 8 }}>
-        <div style={{ backgroundColor: '#e6f7ff', padding: '16px', borderRadius: 4, marginBottom: 16 }}>
-          <Row gutter={[16, 16]}>
-            {upperBins.map((item, idx) => renderBinCard(item, idx))}
-          </Row>
-        </div>
-        <div style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: 4 }}>
-          <Row gutter={[16, 16]}>
-            {lowerBins.map((item, idx) => renderBinCard(item, idx + 4))}
-          </Row>
-        </div>
+        <Row>
+          {/* 왼쪽 Rack 가이드 */}
+          <Col flex="40px">
+            <div style={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 12,
+              paddingTop: 8,
+            }}>
+              <div style={{ width: 6, height: 16, backgroundColor: '#91caff', borderRadius: 3 }} />
+              <div style={{ width: 6, height: 48, backgroundColor: '#ffffff', borderRadius: 3 }} />
+              <div style={{ width: 6, height: 16, backgroundColor: '#91caff', borderRadius: 3 }} />
+              <div style={{ width: 6, height: 16, backgroundColor: '#91caff', borderRadius: 3 }} />
+            </div>
+          </Col>
+
+          {/* 오른쪽 Bin 카드들 */}
+          <Col flex="auto">
+            <div style={{ backgroundColor: '#e6f7ff', padding: '16px', borderRadius: 4, marginBottom: 16 }}>
+              <Row gutter={[16, 16]}>
+                {upperBins.map((item, idx) => renderBinCard(item, idx))}
+              </Row>
+            </div>
+            <div style={{ backgroundColor: '#e6f7ff', padding: '16px', borderRadius: 4 }}>
+              <Row gutter={[16, 16]}>
+                {lowerBins.map((item, idx) => renderBinCard(item, idx + 4))}
+              </Row>
+            </div>
+          </Col>
+        </Row>
       </div>
 
-      <h3 style={{ marginTop: 32 }}>Inventory Reconciliation Result (Date: 2025-06-23)</h3>
+      {/* Reconciliation Title + Refresh */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 32 }}>
+        <h3 style={{ margin: 0 }}>Inventory Reconciliation Result (Date: 2025-06-23)</h3>
+        <button
+          onClick={fetchInventory}
+          style={{
+            backgroundColor: '#1890ff',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            padding: '6px 12px',
+            cursor: 'pointer'
+          }}
+        >
+          🔄 Refresh
+        </button>
+      </div>
+
       <Table
         dataSource={dataSource}
         columns={columns}
