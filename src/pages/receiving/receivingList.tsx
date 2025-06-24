@@ -42,29 +42,26 @@ export default function MyReceivingPage() {
       setLoading(true);
       try {
         const res = await axios.get(
-          'https://t4hw5tf1ye.execute-api.us-east-2.amazonaws.com/Prod/storing-orders',
-          {
-            headers: {
-              Authorization: 'adm',
-            },
-          }
+          'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders?employee_id=RCV2054&role=receiver'
         );
         console.log('✅ Storing orders 불러오기 성공:', res.data);
         const raw: StoringOrder[] = res.data.data;
 
-        const processed: StoringOrderRow[] = raw.map((order) => ({
-          key: order.storing_order_id,
-          storingOrderId: order.storing_order_id,
-          result: order.doc_inspection_result,
-          discrepancy:
-            order.doc_inspection_result === 'PASS' ? '-' : order.discrepancy_detail || '',
-          packages: order.packages
-            ? order.packages.replace(/[\[\]]/g, '').split(';')
-            : [],
-          receivedDate: order.received_date || order.order_date,
-          status: order.status,
-          receiverId: order.receiver_id,
-        }));
+        const processed: StoringOrderRow[] = raw
+          .filter((order) => order.receiver_id === 'RCV2054')
+          .map((order) => ({
+            key: order.storing_order_id,
+            storingOrderId: order.storing_order_id,
+            result: order.doc_inspection_result,
+            discrepancy:
+              order.doc_inspection_result === 'PASS' ? '-' : order.discrepancy_detail || '',
+            packages: order.packages
+              ? order.packages.replace(/[\[\]]/g, '').split(';').filter((p) => p.trim() !== '')
+              : [],
+            receivedDate: order.received_date || order.order_date,
+            status: order.status,
+            receiverId: order.receiver_id,
+          }));
 
         setStoringOrders(processed);
       } catch (e) {
@@ -103,11 +100,10 @@ export default function MyReceivingPage() {
             { title: 'Discrepancy Detail', dataIndex: 'discrepancy', key: 'discrepancy' },
             {
               title: 'Packages',
-              dataIndex: 'packages',
               key: 'packages',
-              render: (pkgs: string[]) => (
+              render: (_: any, record: StoringOrderRow) => (
                 <ul style={{ margin: 0, paddingLeft: 16 }}>
-                  {pkgs.map((p, i) => (
+                  {record.packages.map((p, i) => (
                     <li key={i}>{p}</li>
                   ))}
                 </ul>
@@ -129,6 +125,9 @@ export default function MyReceivingPage() {
                     break;
                   case 'RECEIVED':
                     color = 'green';
+                    break;
+                  case 'BINNED':
+                    color = 'lime';
                     break;
                   default:
                     color = 'default';

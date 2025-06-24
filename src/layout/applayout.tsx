@@ -100,7 +100,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       'picking/mypicking',
       'picking/pickslip',
     ],
-    receiver: ['receiving', 'receiving/soreceiving'],
+    receiver: ['receiving', 'receiving/soreceiving', 'receiving/list'],
     tq_employee: ['tq', 'tq/package'],
     binner: ['binning', 'binning/assign'],
   };
@@ -149,7 +149,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
           SO Receiving
         </Menu.Item>
         <Menu.Item key="receiving/list" style={getItemStyle('receiving/list')}>
-          Receiving List
+          My Receiving
         </Menu.Item>
       </Menu.SubMenu>
       <Menu.SubMenu key="tq" icon={<TableOutlined />} title="Technical Query" style={getItemStyle('tq')}>
