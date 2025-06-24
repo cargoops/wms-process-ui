@@ -1,3 +1,4 @@
+// src/pages/receiving/index.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Typography,
@@ -39,22 +40,26 @@ export default function ReceivingProcess() {
     setLoading(true);
     try {
       const res = await axios.get(
-        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders`,
+        'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders',
         {
           headers: {
-            Authorization: 'adm-12345678',
+            Authorization: 'rcv-7fa3d1b2',
+          },
+          params: {
+            employee_id: 'RCV2054',
+            role: 'receiver',
           },
         }
       );
       const list = Array.isArray(res.data.data) ? res.data.data : [];
       const match = list.find((o: any) => o.storing_order_id === id);
       if (match) {
-  setOrders((prevOrders) => [...prevOrders, match]); // 중복 허용, 무조건 쌓기
-  setEditingDiscrepancies((prev) => ({
-    ...prev,
-    [match.storing_order_id]: match.discrepancy_detail ?? '',
-  }));
-}
+        setOrders((prevOrders) => [...prevOrders, match]);
+        setEditingDiscrepancies((prev) => ({
+          ...prev,
+          [match.storing_order_id]: match.discrepancy_detail ?? '',
+        }));
+      }
     } catch (err) {
       message.error('❌ SO 데이터 조회 실패');
       console.error(err);
@@ -74,10 +79,12 @@ export default function ReceivingProcess() {
     const value = editingDiscrepancies[soId] || '';
     try {
       await axios.put(
-        `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/discrepancy`,
+        'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders/discrepancy',
         {
           storing_order_id: soId,
           discrepancy_detail: value,
+          employee_id: 'RCV2054',
+          role: 'receiver',
         },
         {
           headers: {
@@ -123,6 +130,7 @@ export default function ReceivingProcess() {
       airway_bill_number: doc3,
       quantity: quantity ?? 1,
       employee_id: 'RCV2054',
+      role: 'receiver',
     };
 
     try {
@@ -328,7 +336,6 @@ export default function ReceivingProcess() {
             </Button>
           </Form.Item>
         </Form>
-
       </Card>
 
       <Card title={<Title level={5}>Receiving Result</Title>} bordered>
