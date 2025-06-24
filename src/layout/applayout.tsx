@@ -35,7 +35,7 @@ const { Header, Sider, Content } = Layout;
 const { Text, Title } = Typography;
 
 const menuTitleMap: Record<string, string> = {
-  dashboard: 'Dashboard',
+  dashboard: 'Admin Home',
   'storingorder/list': 'Storing Order List',
   'receiving/soreceiving': 'SO Receiving',
   'receiving/list': 'Receiving List',
@@ -137,7 +137,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({
       }}
     >
       <Menu.Item key="dashboard" icon={<DashboardOutlined />} style={getItemStyle('dashboard')}>
-        Dashboard
+        Admin Home
       </Menu.Item>
       <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order" style={getItemStyle('storingorder')}>
         <Menu.Item key="storingorder/list" style={getItemStyle('storingorder/list')}>
