@@ -1,5 +1,4 @@
-// src/pages/binassign.tsx
-
+// 수정된 binassign.tsx (BinningPage) 코드
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
@@ -61,6 +60,7 @@ const statusColorMap: Record<string, string> = {
   BIN_ASSIGNED: 'green',
   BINNING_DONE: 'blue',
   'READY-FOR-BINNING': 'purple',
+  BINNED: 'green',
 };
 
 const BinningPage: React.FC = () => {
@@ -80,8 +80,9 @@ const BinningPage: React.FC = () => {
       const res = await axios.get(
         'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/packages',
         {
-          headers: {
-            Authorization: 'adm-12345678',
+          params: {
+            employee_id: 'ADMIN01',
+            role: 'admin',
           },
         }
       );

@@ -46,6 +46,7 @@ const PickSlipOrderTabbedView: React.FC = () => {
   const [tabOrders, setTabOrders] = useState<Record<string, PickOrder[]>>({});
   const [pickSlips, setPickSlips] = useState<PickSlip[]>([]);
   const [filtered, setFiltered] = useState<PickSlip[]>([]);
+  const [activeKey, setActiveKey] = useState<string>(''); // ✅ 현재 활성 탭
 
   useEffect(() => {
     fetchData();
@@ -53,22 +54,23 @@ const PickSlipOrderTabbedView: React.FC = () => {
 
   const fetchData = async () => {
     setLoading(true);
+
+    const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+    const employeeId = auth.employee_id || 'ADMIN01';
+    const role = auth.role || 'admin';
+
     try {
       const [slipRes, orderRes] = await Promise.all([
-        axios.get<PickSlip[]>('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-slips', {
-          headers: { Authorization: 'adm-12345678' },
-        }),
-        axios.get<PickOrder[]>('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-orders', {
-          headers: { Authorization: 'adm-12345678' },
-        }),
+        axios.get<PickSlip[]>(`https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-slips?employee_id=${employeeId}&role=${role}`),
+        axios.get<PickOrder[]>(`https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/pick-orders?employee_id=${employeeId}&role=${role}`),
       ]);
 
       setPickOrders(orderRes.data);
       setPickSlips(slipRes.data);
       setFiltered(slipRes.data);
-
       console.log('Fetched pick orders:', orderRes.data);
     } catch (err) {
+      console.error(err);
       message.error('Failed to load data');
     } finally {
       setLoading(false);
@@ -83,11 +85,12 @@ const PickSlipOrderTabbedView: React.FC = () => {
   };
 
   const handlePickSlipClick = (slipId: string) => {
-    if (tabs.includes(slipId)) return;
-
-    const orders = pickOrders.filter(o => o.pick_slip_id === slipId);
-    setTabOrders(prev => ({ ...prev, [slipId]: orders }));
-    setTabs(prev => [...prev, slipId]);
+    if (!tabs.includes(slipId)) {
+      const orders = pickOrders.filter(o => o.pick_slip_id === slipId);
+      setTabOrders(prev => ({ ...prev, [slipId]: orders }));
+      setTabs(prev => [...prev, slipId]);
+    }
+    setActiveKey(slipId); // ✅ 탭 전환
   };
 
   const handleTabEdit = (
@@ -101,6 +104,11 @@ const PickSlipOrderTabbedView: React.FC = () => {
         delete updated[targetKey];
         return updated;
       });
+      // ✅ 탭이 닫히면 자동으로 다른 탭으로 이동
+      if (activeKey === targetKey) {
+        const otherTabs = tabs.filter(t => t !== targetKey);
+        setActiveKey(otherTabs[0] || '');
+      }
     }
   };
 
@@ -124,7 +132,7 @@ const PickSlipOrderTabbedView: React.FC = () => {
       key: 'pick_slip_status',
       render: (status: string) => (
         <Tag color={statusColorMap[status] || 'default'}>
-          {status.replace(/_/g, ' ')}
+          {(status || '').replace(/_/g, ' ')}
         </Tag>
       ),
     },
@@ -155,7 +163,9 @@ const PickSlipOrderTabbedView: React.FC = () => {
       dataIndex: 'pick_order_status',
       key: 'pick_order_status',
       render: (status: string) => (
-        <Tag color={statusColorMap[status] || 'default'}>{status}</Tag>
+        <Tag color={statusColorMap[status] || 'default'}>
+          {(status || '').replace(/_/g, ' ')}
+        </Tag>
       ),
     },
     { title: 'Picked Date', dataIndex: 'picked_date', key: 'picked_date' },
@@ -181,6 +191,8 @@ const PickSlipOrderTabbedView: React.FC = () => {
           <Tabs
             type="editable-card"
             hideAdd
+            activeKey={activeKey} // ✅ 현재 탭 설정
+            onChange={setActiveKey} // ✅ 탭 변경 시 activeKey 갱신
             onEdit={handleTabEdit}
           >
             {tabs.map(slipId => (

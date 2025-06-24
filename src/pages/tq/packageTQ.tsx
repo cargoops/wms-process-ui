@@ -46,6 +46,10 @@ const PackageTQPage: React.FC = () => {
       const response = await axios.get(
         'https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/packages',
         {
+          params: {
+            employee_id: 'ADMIN01',
+            role: 'admin',
+          },
           headers: {
             'Content-Type': 'application/json',
             Authorization: 'adm-12345678',

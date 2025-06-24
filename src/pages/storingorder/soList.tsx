@@ -32,17 +32,6 @@ interface ReceivingItem {
   status: string;
 }
 
-interface ApiReceivingItem {
-  quantity: number;
-  packageId: string;
-  breadth: number;
-  storingOrderId: string;
-  width: number;
-  height: number;
-  status: string;
-  productId: string;
-}
-
 export default function StoringOrderPage() {
   const [activeStoringOrder, setActiveStoringOrder] = useState<string | null>(null);
   const [openedTabs, setOpenedTabs] = useState<string[]>([]);
@@ -61,15 +50,20 @@ export default function StoringOrderPage() {
     const fetchStoringOrders = async () => {
       setLoading(true);
       try {
-        const res = await api.get('/storing-orders');
+        const res = await api.get('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/storing-orders', {
+          params: {
+            employee_id: 'RCV2054',
+            role: 'receiver',
+          },
+        });
         const mapped: StoringOrder[] = res.data?.data.map((item: any, idx: number) => ({
           key: idx,
-          storingOrderId: item.storingOrderId,
-          airwayBillNumber: item.airwayBillNumber,
-          billOfEntryId: item.billOfEntryId,
-          customerId: item.customerId,
-          invoiceNumber: item.invoiceNumber,
-          orderDate: item.orderDate,
+          storingOrderId: item.storing_order_id,
+          airwayBillNumber: item.airway_bill_number,
+          billOfEntryId: item.bill_of_entry_id,
+          customerId: item.customer_id,
+          invoiceNumber: item.invoice_number,
+          orderDate: item.order_date,
           status: item.status,
         })) || [];
         setRawData(mapped);
@@ -87,13 +81,18 @@ export default function StoringOrderPage() {
     const fetchReceivingData = async () => {
       setReceivingLoading(true);
       try {
-        const res = await api.get('/packages');
-        const mapped: ReceivingItem[] = res.data.data.map((item: ApiReceivingItem, idx: number) => ({
+        const res = await api.get('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/packages', {
+          params: {
+            employee_id: 'ADMIN01',
+            role: 'admin',
+          },
+        });
+        const mapped: ReceivingItem[] = res.data.data.map((item: any, idx: number) => ({
           key: idx,
-          receivingId: item.storingOrderId,
-          packageId: item.packageId,
-          barcode: `BAR-${item.packageId}`,
-          productId: item.productId,
+          receivingId: item.storing_order_id,
+          packageId: item.package_id,
+          barcode: `BAR-${item.package_id}`,
+          productId: item.product_id,
           receiverId: 'emp-001',
           receivedDate: moment().format('YY-MM-DD-HH-mm'),
           dimensions: `${item.height} * ${item.width} * ${item.breadth}`,
@@ -127,9 +126,30 @@ export default function StoringOrderPage() {
     setActiveStoringOrder(id);
   };
 
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'OPEN':
+        return 'orange';
+      case 'TQ':
+        return 'geekblue';
+      case 'BIN':
+        return 'green';
+      case 'INSPECTION-FAILED':
+        return 'volcano';
+      case 'TQ-QUALITY-CHECK-FAILED':
+        return 'magenta';
+      case 'READY-FOR-BIN-ALLOCATION':
+        return 'cyan';
+      case 'RECEIVED':
+        return 'green';
+      default:
+        return 'default';
+    }
+  };
+
   return (
     <>
-      {/* ✅ 필터 영역 */}
+      {/* 필터 영역 */}
       <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
         <Row gutter={80} align="top">
           <Col>
@@ -174,7 +194,7 @@ export default function StoringOrderPage() {
         </Row>
       </div>
 
-      {/* ✅ Storing Order 테이블 */}
+      {/* 테이블 */}
       <div style={{ background: '#fff', padding: 24, marginBottom: 24 }}>
         <Title level={5}>Storing Order Request List</Title>
         <Table
@@ -194,17 +214,7 @@ export default function StoringOrderPage() {
               title: 'Status',
               dataIndex: 'status',
               key: 'status',
-              render: (status: string) => {
-                const color =
-                  status === 'OPEN'
-                    ? 'orange'
-                    : status === 'TQ'
-                    ? 'geekblue'
-                    : status === 'BIN'
-                    ? 'green'
-                    : 'default';
-                return <Tag color={color}>{status}</Tag>;
-              },
+              render: (status: string) => <Tag color={getStatusColor(status)}>{status}</Tag>,
             },
           ]}
           dataSource={data}
@@ -213,60 +223,49 @@ export default function StoringOrderPage() {
         />
       </div>
 
-      {/* ✅ 상세 패널 및 입고 목록 */}
-    <div style={{ background: '#fff', padding: 24 }}>
-    <Title level={5}>Storing Order Detail & Progress</Title>
-    <Tabs
-        activeKey={activeStoringOrder ?? undefined}
-        onChange={setActiveStoringOrder}
-        type="editable-card"
-        hideAdd
-        onEdit={(targetKey, action) => {
-        if (action === 'remove') {
-            const newTabs = openedTabs.filter((id) => id !== targetKey);
-            setOpenedTabs(newTabs);
-            if (activeStoringOrder === targetKey) {
-            setActiveStoringOrder(newTabs[0] ?? null);
+      <div style={{ background: '#fff', padding: 24 }}>
+        <Title level={5}>Storing Order Detail & Progress</Title>
+        <Tabs
+          activeKey={activeStoringOrder ?? undefined}
+          onChange={setActiveStoringOrder}
+          type="editable-card"
+          hideAdd
+          onEdit={(targetKey, action) => {
+            if (action === 'remove') {
+              const newTabs = openedTabs.filter((id) => id !== targetKey);
+              setOpenedTabs(newTabs);
+              if (activeStoringOrder === targetKey) {
+                setActiveStoringOrder(newTabs[0] ?? null);
+              }
             }
-        }
-        }}
-    >
-        {openedTabs.map((id) => (
-        <TabPane tab={id} key={id} closable />
-        ))}
-    </Tabs>
+          }}
+        >
+          {openedTabs.map((id) => (
+            <TabPane tab={id} key={id} closable />
+          ))}
+        </Tabs>
 
-    <Table
-        columns={[
-        { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
-        { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
-        { title: 'Height * Width * Breadth', dataIndex: 'dimensions', key: 'dimensions' },
-        {
-            title: 'Status',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status: string) => {
-            const color =
-                status === 'OPEN'
-                ? 'orange'
-                : status === 'TQ'
-                ? 'geekblue'
-                : status === 'BIN'
-                ? 'green'
-                : 'default';
-            return <Tag color={color}>{status}</Tag>;
+        <Table
+          columns={[
+            { title: 'Package ID', dataIndex: 'packageId', key: 'packageId' },
+            { title: 'Product ID', dataIndex: 'productId', key: 'productId' },
+            { title: 'Height * Width * Breadth', dataIndex: 'dimensions', key: 'dimensions' },
+            {
+              title: 'Status',
+              dataIndex: 'status',
+              key: 'status',
+              render: (status: string) => <Tag color={getStatusColor(status)}>{status}</Tag>,
             },
-        },
-        ]}
-        dataSource={
-        activeStoringOrder
-            ? receivingData.filter((item) => item.receivingId === activeStoringOrder)
-            : []
-        }
-        loading={receivingLoading}
-        pagination={false}
-    />
-    </div>
+          ]}
+          dataSource={
+            activeStoringOrder
+              ? receivingData.filter((item) => item.receivingId === activeStoringOrder)
+              : []
+          }
+          loading={receivingLoading}
+          pagination={false}
+        />
+      </div>
     </>
   );
 }
