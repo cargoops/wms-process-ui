@@ -14,11 +14,16 @@ export default function InventoryMgtPage() {
 
   const fetchInventory = () => {
     setLoading(true);
-    fetch('https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/inventory', {
-      headers: {
-        Authorization: 'adm-12345678',
-      },
-    })
+
+    // localStorage에서 인증 정보 불러오기
+    const authData = JSON.parse(localStorage.getItem('auth') || '{}');
+    const employeeId = authData.employee_id || 'ADMIN01';
+    const role = authData.role || 'admin';
+
+    // 쿼리 파라미터로 API 호출
+    const apiUrl = `https://ozw3p7h26e.execute-api.us-east-2.amazonaws.com/Prod/inventory?employee_id=${employeeId}&role=${role}`;
+
+    fetch(apiUrl)
       .then((res) => res.json())
       .then((data) => {
         const validBins = data.data
