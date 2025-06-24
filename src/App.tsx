@@ -8,7 +8,6 @@ import PrivateRoute from './components/privateroute';
 
 // 상위 페이지들
 import DashboardPage from './pages/dashboard';
-import MasterPage from './pages/master';
 import ReceivingPage from './pages/receiving';
 import SOPage from './pages/so';
 import TQPage from './pages/tq';
@@ -45,12 +44,10 @@ export default function App() {
     inventory: 'Inventory',
     picking: 'Picking',
     dashboard: 'Dashboard',
-    master: 'Master',
   };
 
   const pageTitles: Record<string, string> = {
     dashboard: 'Dashboard',
-    master: 'Master Data',
     soList: 'Storing Order List (All)',
     soReceiving: 'SO Receiving',
     receivingList: 'Receiving List (All)',
@@ -97,7 +94,6 @@ export default function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="master" element={<MasterPage />} />
 
           {/* Storing Order */}
           <Route path="storingorder" element={<SOPage />}>

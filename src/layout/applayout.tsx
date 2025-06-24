@@ -36,7 +36,6 @@ const { Text, Title } = Typography;
 
 const menuTitleMap: Record<string, string> = {
   dashboard: 'Dashboard',
-  master: 'Master',
   'storingorder/list': 'Storing Order List',
   'receiving/soreceiving': 'SO Receiving',
   'receiving/list': 'Receiving List',
@@ -86,7 +85,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   const allowedMenusByRole: Record<string, string[]> = {
     admin: [
       'dashboard',
-      'master',
       'storingorder',
       'storingorder/list',
       'receiving',
@@ -140,9 +138,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
     >
       <Menu.Item key="dashboard" icon={<DashboardOutlined />} style={getItemStyle('dashboard')}>
         Dashboard
-      </Menu.Item>
-      <Menu.Item key="master" icon={<HighlightOutlined />} style={getItemStyle('master')}>
-        Master
       </Menu.Item>
       <Menu.SubMenu key="storingorder" icon={<FormOutlined />} title="Storing Order" style={getItemStyle('storingorder')}>
         <Menu.Item key="storingorder/list" style={getItemStyle('storingorder/list')}>
